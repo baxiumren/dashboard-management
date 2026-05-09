@@ -27,11 +27,13 @@ func FanpageList(w http.ResponseWriter, r *http.Request) {
 
 	stats := models.GetFanpageStats()
 	akunList, _ := models.GetAllAkunFBSimple()
+	bmList, _ := models.GetAllBMSimple()
 
 	tmplFanpage.ExecuteTemplate(w, "fanpage.html", map[string]interface{}{
 		"List":         list,
 		"Stats":        stats,
 		"AkunList":     akunList,
+		"BMList":       bmList,
 		"Search":       search,
 		"StatusFilter": status,
 		"Page":         "fanpage",

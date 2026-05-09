@@ -360,6 +360,64 @@ document.addEventListener('input', function(e) {
     if (msg && msg.classList.contains('field-error-msg')) msg.remove();
   }
 });
+
+// ── Live Search Filter ──
+(function() {
+  var searchInput = document.querySelector('input[name="search"]');
+  if (!searchInput) return;
+
+  var debTimer;
+  var badge;
+
+  // Buat badge counter kecil di sebelah tombol Cari
+  function ensureBadge() {
+    if (badge) return;
+    badge = document.createElement('span');
+    badge.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:9999px;font-weight:600;background:rgba(59,130,246,0.12);color:#60a5fa;display:none;white-space:nowrap';
+    var btn = searchInput.closest('form').querySelector('button[type="submit"]');
+    if (btn) btn.insertAdjacentElement('afterend', badge);
+  }
+
+  searchInput.addEventListener('input', function() {
+    clearTimeout(debTimer);
+    debTimer = setTimeout(doFilter, 120);
+  });
+
+  // Jika user clear field lewat keyboard/clear button, langsung filter
+  searchInput.addEventListener('search', doFilter);
+
+  function doFilter() {
+    ensureBadge();
+    var q = searchInput.value.toLowerCase().trim();
+    var visible = 0, total = 0;
+
+    // Desktop table rows
+    document.querySelectorAll('table tbody tr').forEach(function(row) {
+      if (row.querySelector('td[colspan]')) return; // baris empty state
+      total++;
+      var match = !q || row.textContent.toLowerCase().includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    // Mobile cards (hanya data card, bukan empty state)
+    document.querySelectorAll('.md\\:hidden .card.rounded-2xl').forEach(function(card) {
+      if (!card.querySelector('[onclick*="openInfo"]')) return;
+      var match = !q || card.textContent.toLowerCase().includes(q);
+      card.style.display = match ? '' : 'none';
+    });
+
+    // Tampilkan badge hanya saat ada query
+    if (badge) {
+      if (q && total > 0) {
+        badge.textContent = visible + ' / ' + total;
+        badge.style.display = '';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+})();
 </script>
 
 <!-- Bottom Navigation (mobile only) -->
@@ -448,6 +506,10 @@ document.addEventListener('input', function(e) {
     </div>
   </div>
 </nav>
+<div class="px-4 py-3 text-center" style="border-top:1px solid var(--border)">
+  <div class="text-xs font-bold tracking-widest uppercase" style="color:var(--text2);letter-spacing:0.1em">Baxium Coder</div>
+  <div style="font-size:10px;margin-top:3px;color:var(--muted)">FB Management Account &nbsp;<span style="background:rgba(59,130,246,0.15);color:#60a5fa;padding:1px 6px;border-radius:4px;font-weight:600;font-size:9px">v1.2</span></div>
+</div>
 <div class="px-4 py-3 border-t flex items-center gap-3 justify-between" style="border-color:var(--border)">
   <div class="flex items-center gap-3">
     <div class="w-8 h-8 rounded-full btn-primary flex items-center justify-center text-xs font-bold">A</div>

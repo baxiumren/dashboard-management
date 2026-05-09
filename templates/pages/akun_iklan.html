@@ -131,6 +131,9 @@
           <td class="px-4 py-3"><span class="badge badge-{{$ai.Status}}">{{title $ai.Status}}</span></td>
           <td class="px-4 py-3">
             <div class="flex gap-1 justify-end">
+              <button onclick="openInfo({{$ai.ID}})" title="Detail Info" class="p-1.5 rounded-lg" style="background:rgba(14,165,233,0.12);color:#38bdf8">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
               <button onclick="openRiwayat({{$ai.ID}})" title="Lihat Riwayat" class="p-1.5 rounded-lg btn-indigo">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </button>
@@ -186,6 +189,7 @@
         <div><span style="color:var(--muted)">Metode Bayar</span><br><span style="color:var(--text2)">{{if $ai.MetodeBayar}}{{$ai.MetodeBayar}}{{else}}—{{end}}</span></div>
       </div>
       <div class="flex gap-2">
+        <button onclick="openInfo({{$ai.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium" style="background:rgba(14,165,233,0.12);color:#38bdf8">Info</button>
         <button onclick="openRiwayat({{$ai.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-indigo">Riwayat</button>
         <button onclick="openEdit({{$ai.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-blue">Edit</button>
         <a href="/akun-iklan/hapus?id={{$ai.ID}}" onclick="return confirm('Hapus akun iklan ini?')" class="flex-1 py-2 rounded-xl text-xs font-medium btn-red text-center">Hapus</a>
@@ -329,6 +333,22 @@
   </div>
 </div>
 
+<!-- ── MODAL INFO ── -->
+<div id="modal-info" class="modal-wrap">
+  <div class="modal-box" style="max-width:520px">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Detail Akun Iklan</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Informasi lengkap akun iklan ini</p>
+      </div>
+      <button onclick="document.getElementById('modal-info').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="info-content"></div>
+  </div>
+</div>
+
 <script>
 const aiData = {
   {{range $ai := .List}}
@@ -345,6 +365,8 @@ const aiData = {
     status: {{jsonStr $ai.Status}},
     tgl_buat: {{jsonStr $ai.TglBuat}},
     catatan: {{jsonStr $ai.Catatan}},
+    bm_nama: {{jsonStr $ai.BMNama}},
+    runner_nama: {{jsonStr $ai.RunnerNama}},
   },
   {{end}}
 };
@@ -411,6 +433,58 @@ function openEdit(id) {
       </div>
     </form>`;
   document.getElementById('modal-edit').classList.add('show');
+}
+
+function openInfo(id) {
+  const ai = aiData[id];
+  if (!ai) return;
+  const statusLabel = {aktif:'Aktif',disabled:'Disabled',banned:'Banned'};
+  const fmt = n => n ? 'Rp '+Number(n).toLocaleString('id-ID') : '—';
+  document.getElementById('info-content').innerHTML = `
+    <div>
+      <div class="flex items-center gap-3 pb-4 mb-4" style="border-bottom:1px solid var(--border)">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff">
+          ${ai.nama ? ai.nama[0].toUpperCase() : '?'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--text)">${ai.nama || 'Belum diisi'}</div>
+          <div class="text-xs font-mono mt-0.5" style="color:var(--muted)">act_${ai.ad_account_id || '—'}</div>
+        </div>
+        <span class="badge badge-${ai.status}">${statusLabel[ai.status]||ai.status}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Business Manager</div>
+          <div style="color:var(--text2)">${ai.bm_nama||'—'}</div>
+        </div>
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Runner Akun FB</div>
+          <div style="color:var(--text2)">${ai.runner_nama||'—'}</div>
+        </div>
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Limit Harian</div>
+          <div style="color:var(--text2)">${fmt(ai.limit_harian)}</div>
+        </div>
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Limit Total</div>
+          <div style="color:var(--text2)">${fmt(ai.limit_total)}</div>
+        </div>
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Metode Bayar</div>
+          <div style="color:var(--text2)">${ai.metode_bayar||'—'}</div>
+        </div>
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Mata Uang / Tgl Buat</div>
+          <div style="color:var(--text2)">${ai.mata_uang||'—'} · ${ai.tgl_buat||'—'}</div>
+        </div>
+      </div>
+      ${ai.catatan ? `<div class="mt-2 rounded-xl p-3" style="background:var(--hover)"><div class="text-xs mb-1" style="color:var(--muted)">Catatan</div><div style="color:var(--text2);white-space:pre-wrap">${ai.catatan}</div></div>` : ''}
+      <div class="flex gap-2 mt-4">
+        <button onclick="document.getElementById('modal-info').classList.remove('show');openEdit(${ai.id})" class="flex-1 py-2.5 rounded-xl text-sm font-medium btn-blue">Edit Akun Iklan</button>
+        <button onclick="document.getElementById('modal-info').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Tutup</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-info').classList.add('show');
 }
 
 function openRiwayat(id) {

@@ -177,6 +177,9 @@
           <td class="px-4 py-3"><span class="badge badge-{{$a.Status}}">{{title $a.Status}}</span></td>
           <td class="px-4 py-3">
             <div class="flex gap-1 justify-end">
+              <button onclick="openInfo({{$a.ID}})" title="Detail Info" class="p-1.5 rounded-lg" style="background:rgba(14,165,233,0.12);color:#38bdf8">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
               <button onclick="openRiwayat({{$a.ID}})" title="Lihat Riwayat" class="p-1.5 rounded-lg btn-indigo">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </button>
@@ -254,6 +257,7 @@
         {{end}}
       </div>
       <div class="flex gap-2">
+        <button onclick="openInfo({{$a.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium" style="background:rgba(14,165,233,0.12);color:#38bdf8">Info</button>
         <button onclick="openRiwayat({{$a.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-indigo">Riwayat</button>
         <button onclick="openEdit({{$a.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-blue">Edit</button>
         <a href="/akun-fb/hapus?id={{$a.ID}}" onclick="return confirm('Hapus akun ini?')" class="flex-1 py-2 rounded-xl text-xs font-medium btn-red text-center">Hapus</a>
@@ -427,6 +431,22 @@
   </div>
 </div>
 
+<!-- ── MODAL INFO ── -->
+<div id="modal-info" class="modal-wrap">
+  <div class="modal-box" style="max-width:520px">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Detail Akun FB</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Informasi lengkap akun ini</p>
+      </div>
+      <button onclick="document.getElementById('modal-info').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="info-content"></div>
+  </div>
+</div>
+
 <script>
 const akunData = {
   {{range $a := .List}}
@@ -441,6 +461,11 @@ const akunData = {
     harga_beli: {{$a.HargaBeli}},
     seller: {{jsonStr $a.Seller}},
     catatan: {{jsonStr $a.Catatan}},
+    cookie_ada: {{if $a.Cookie}}true{{else}}false{{end}},
+    password: {{jsonStr $a.Password}},
+    password_mail: {{jsonStr $a.PasswordMail}},
+    cookie: {{jsonStr $a.Cookie}},
+    twofa_secret: {{jsonStr $a.TwoFASecret}},
   },
   {{end}}
 };
@@ -484,6 +509,124 @@ function openEdit(id) {
       </div>
     </form>`;
   document.getElementById('modal-edit').classList.add('show');
+}
+
+function openInfo(id) {
+  const a = akunData[id];
+  if (!a) return;
+  const statusLabel = {aktif:'Aktif',checkpoint:'Checkpoint',suspend:'Suspend',kunci:'Kunci',selfie:'Selfie',nonaktif:'Nonaktif',banned:'Banned'};
+
+  // Field teks biasa — selalu tampil, "—" kalau kosong
+  function fld(label, val) {
+    const v = val || '—';
+    const isEmpty = !val;
+    return `<div class="rounded-xl p-3" style="background:var(--hover)">
+      <div class="text-xs mb-1" style="color:var(--muted)">${label}</div>
+      <div style="color:${isEmpty?'var(--muted)':'var(--text2)'};word-break:break-all">${v}</div>
+    </div>`;
+  }
+
+  // Field password — selalu tampil, ada toggle show/hide + tombol salin
+  function passField(label, val, uid) {
+    if (val) {
+      return `<div class="rounded-xl p-3" style="background:var(--hover)">
+        <div class="text-xs mb-1" style="color:var(--muted)">${label}</div>
+        <div class="flex items-center gap-1.5">
+          <span id="info-pass-${uid}" class="flex-1 text-xs font-mono" style="color:var(--text2);letter-spacing:2px;word-break:break-all">••••••••</span>
+          <button onclick="toggleInfoPass('${uid}',${id},'${uid==='pw'?'password':'password_mail'}')" class="p-1 rounded-lg flex-shrink-0" style="color:var(--muted);background:var(--border)" title="Tampilkan">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
+          <button onclick="copyText(akunData[${id}].${uid==='pw'?'password':'password_mail'})" class="p-1 rounded-lg flex-shrink-0" style="color:var(--muted);background:var(--border)" title="Salin">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }
+    return `<div class="rounded-xl p-3" style="background:var(--hover)">
+      <div class="text-xs mb-1" style="color:var(--muted)">${label}</div>
+      <div style="color:var(--muted)">—</div>
+    </div>`;
+  }
+
+  const cookieHtml = a.cookie_ada
+    ? `<div class="rounded-xl p-3 col-span-2" style="background:var(--hover)">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs" style="color:var(--muted)">Cookie</span>
+          <button onclick="copyText(akunData[${id}].cookie)" class="text-xs px-2 py-0.5 rounded-lg flex items-center gap-1" style="background:rgba(34,197,94,0.12);color:#4ade80">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Salin Cookie
+          </button>
+        </div>
+        <div class="text-xs font-mono" style="color:#4ade80;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${a.cookie.slice(0,80)}${a.cookie.length>80?'…':''}</div>
+      </div>`
+    : `<div class="rounded-xl p-3 col-span-2" style="background:var(--hover)">
+        <div class="text-xs mb-1" style="color:var(--muted)">Cookie</div>
+        <span class="badge badge-tidak">✗ Kosong</span>
+      </div>`;
+
+  const totpHtml = a.twofa_secret
+    ? `<div class="rounded-xl p-3 col-span-2" style="background:var(--hover)">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs" style="color:var(--muted)">2FA Secret</span>
+          <button onclick="copyText(akunData[${id}].twofa_secret)" class="text-xs px-2 py-0.5 rounded-lg" style="background:rgba(34,197,94,0.12);color:#4ade80">Salin</button>
+        </div>
+        <div class="text-xs font-mono" style="color:var(--text2);word-break:break-all">${a.twofa_secret}</div>
+      </div>`
+    : `<div class="rounded-xl p-3 col-span-2" style="background:var(--hover)">
+        <div class="text-xs mb-1" style="color:var(--muted)">2FA Secret</div>
+        <div style="color:var(--muted)">—</div>
+      </div>`;
+
+  document.getElementById('info-content').innerHTML = `
+    <div>
+      <div class="flex items-center gap-3 pb-4 mb-4" style="border-bottom:1px solid var(--border)">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0" style="background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff">
+          ${a.nama ? a.nama[0].toUpperCase() : '?'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--text)">${a.nama || '—'}</div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="text-xs font-mono" style="color:var(--muted)">${a.fb_id || '—'}</span>
+            ${a.fb_id ? `<button onclick="copyText(akunData[${id}].fb_id)" class="p-0.5 rounded" style="color:var(--muted)" title="Salin FB ID"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>` : ''}
+          </div>
+        </div>
+        <span class="badge badge-${a.status}">${statusLabel[a.status]||a.status}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        ${fld('Email', a.email)}
+        ${fld('Recovery Mail', a.recovery_mail)}
+        ${passField('Password FB', a.password, 'pw')}
+        ${passField('Password Email', a.password_mail, 'pm')}
+        ${cookieHtml}
+        ${totpHtml}
+        ${fld('Tgl Beli', a.tgl_beli)}
+        ${fld('Harga Beli', a.harga_beli ? 'Rp '+Number(a.harga_beli).toLocaleString('id-ID') : '')}
+        ${fld('Seller', a.seller)}
+        ${fld('Status', statusLabel[a.status]||a.status)}
+      </div>
+      <div class="mt-2 rounded-xl p-3" style="background:var(--hover)"><div class="text-xs mb-1" style="color:var(--muted)">Catatan</div><div class="text-sm" style="word-break:break-word;white-space:pre-wrap" style="color:${a.catatan?'var(--text2)':'var(--muted)'}">${a.catatan||'—'}</div></div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="document.getElementById('modal-info').classList.remove('show');openEdit(${a.id})" class="flex-1 py-2.5 rounded-xl text-sm font-medium btn-blue">Edit Akun</button>
+        <button onclick="document.getElementById('modal-info').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Tutup</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-info').classList.add('show');
+}
+
+function toggleInfoPass(uid, id, fieldName) {
+  const el = document.getElementById('info-pass-' + uid);
+  if (!el) return;
+  if (el.textContent === '••••••••') {
+    el.textContent = (akunData[id] && akunData[id][fieldName]) || '—';
+    el.style.letterSpacing = '0';
+  } else {
+    el.textContent = '••••••••';
+    el.style.letterSpacing = '2px';
+  }
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Disalin!', 'success'));
 }
 
 function openRiwayat(id) {

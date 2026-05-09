@@ -109,6 +109,9 @@
           <td class="px-4 py-3"><span class="badge badge-{{$p.Status}}">{{title $p.Status}}</span></td>
           <td class="px-4 py-3">
             <div class="flex gap-1 justify-end">
+              <button onclick="openInfo({{$p.ID}})" title="Detail Info" class="p-1.5 rounded-lg" style="background:rgba(14,165,233,0.12);color:#38bdf8">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
               <button onclick="openRiwayat({{$p.ID}})" title="Riwayat" class="p-1.5 rounded-lg btn-indigo">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </button>
@@ -163,6 +166,7 @@
         <div><span style="color:var(--muted)">Tgl Buat</span><br><span style="color:var(--text2)">{{if $p.TglBuat}}{{$p.TglBuat}}{{else}}—{{end}}</span></div>
       </div>
       <div class="flex gap-2">
+        <button onclick="openInfo({{$p.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium" style="background:rgba(14,165,233,0.12);color:#38bdf8">Info</button>
         <button onclick="openRiwayat({{$p.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-indigo">Riwayat</button>
         <button onclick="openEdit({{$p.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-blue">Edit</button>
         <a href="/pixel/hapus?id={{$p.ID}}" onclick="return confirm('Hapus pixel ini?')" class="flex-1 py-2 rounded-xl text-xs font-medium btn-red text-center">Hapus</a>
@@ -274,6 +278,22 @@
   </div>
 </div>
 
+<!-- MODAL INFO -->
+<div id="modal-info" class="modal-wrap">
+  <div class="modal-box" style="max-width:480px">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Detail Pixel</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Informasi lengkap pixel ini</p>
+      </div>
+      <button onclick="document.getElementById('modal-info').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="info-content"></div>
+  </div>
+</div>
+
 <script>
 const pixelData = {
   {{range $p := .List}}
@@ -286,6 +306,8 @@ const pixelData = {
     status: {{jsonStr $p.Status}},
     tgl_buat: {{jsonStr $p.TglBuat}},
     catatan: {{jsonStr $p.Catatan}},
+    bm_nama: {{jsonStr $p.BMNama}},
+    akun_fb_nama: {{jsonStr $p.AkunFBNama}},
   },
   {{end}}
 };
@@ -323,6 +345,45 @@ function openEdit(id) {
       </div>
     </form>`;
   document.getElementById('modal-edit').classList.add('show');
+}
+
+function openInfo(id) {
+  const p = pixelData[id];
+  if (!p) return;
+  const statusLabel = {aktif:'Aktif',nonaktif:'Nonaktif'};
+  document.getElementById('info-content').innerHTML = `
+    <div>
+      <div class="flex items-center gap-3 pb-4 mb-4" style="border-bottom:1px solid var(--border)">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#7c3aed,#6366f1)">
+          <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--text)">${p.nama || 'Belum diisi'}</div>
+          <div class="text-xs font-mono mt-0.5" style="color:var(--muted)">${p.pixel_id || '—'}</div>
+        </div>
+        <span class="badge badge-${p.status}">${statusLabel[p.status]||p.status}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Business Manager</div>
+          <div style="color:var(--text2)">${p.bm_nama||'—'}</div>
+        </div>
+        <div class="rounded-xl p-3" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Akun FB Owner</div>
+          <div style="color:var(--text2)">${p.akun_fb_nama||'—'}</div>
+        </div>
+        <div class="rounded-xl p-3 col-span-2" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Tanggal Buat</div>
+          <div style="color:var(--text2)">${p.tgl_buat||'—'}</div>
+        </div>
+      </div>
+      ${p.catatan ? `<div class="mt-2 rounded-xl p-3" style="background:var(--hover)"><div class="text-xs mb-1" style="color:var(--muted)">Catatan</div><div style="color:var(--text2);white-space:pre-wrap">${p.catatan}</div></div>` : ''}
+      <div class="flex gap-2 mt-4">
+        <button onclick="document.getElementById('modal-info').classList.remove('show');openEdit(${p.id})" class="flex-1 py-2.5 rounded-xl text-sm font-medium btn-blue">Edit Pixel</button>
+        <button onclick="document.getElementById('modal-info').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Tutup</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-info').classList.add('show');
 }
 
 function openRiwayat(id) {

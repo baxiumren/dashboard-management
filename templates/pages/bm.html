@@ -113,6 +113,9 @@
           <td class="px-4 py-3"><span class="badge badge-{{$b.Status}}">{{title $b.Status}}</span></td>
           <td class="px-4 py-3">
             <div class="flex gap-1 justify-end">
+              <button onclick="openInfo({{$b.ID}})" title="Detail Info" class="p-1.5 rounded-lg" style="background:rgba(14,165,233,0.12);color:#38bdf8">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
               <button onclick="openRiwayat({{$b.ID}})" title="Lihat Riwayat" class="p-1.5 rounded-lg btn-indigo">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </button>
@@ -166,6 +169,7 @@
         <div><span style="color:var(--muted)">Tgl Buat</span><br><span style="color:var(--text2)">{{if $b.TglBuat}}{{$b.TglBuat}}{{else}}—{{end}}</span></div>
       </div>
       <div class="flex gap-2">
+        <button onclick="openInfo({{$b.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium" style="background:rgba(14,165,233,0.12);color:#38bdf8">Info</button>
         <button onclick="openRiwayat({{$b.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-indigo">Riwayat</button>
         <button onclick="openEdit({{$b.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-blue">Edit</button>
         <a href="/bm/hapus?id={{$b.ID}}" onclick="return confirm('Hapus BM ini?')" class="flex-1 py-2 rounded-xl text-xs font-medium btn-red text-center">Hapus</a>
@@ -272,6 +276,22 @@
   </div>
 </div>
 
+<!-- ── MODAL INFO ── -->
+<div id="modal-info" class="modal-wrap">
+  <div class="modal-box" style="max-width:480px">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Detail Business Manager</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Informasi lengkap BM ini</p>
+      </div>
+      <button onclick="document.getElementById('modal-info').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="info-content"></div>
+  </div>
+</div>
+
 <script>
 const bmData = {
   {{range $b := .List}}
@@ -283,6 +303,7 @@ const bmData = {
     status: {{jsonStr $b.Status}},
     tgl_buat: {{jsonStr $b.TglBuat}},
     catatan: {{jsonStr $b.Catatan}},
+    owner_nama: {{jsonStr $b.OwnerNama}},
   },
   {{end}}
 };
@@ -322,6 +343,41 @@ function openEdit(id) {
       </div>
     </form>`;
   document.getElementById('modal-edit').classList.add('show');
+}
+
+function openInfo(id) {
+  const b = bmData[id];
+  if (!b) return;
+  const statusLabel = {aktif:'Aktif',disabled:'Disabled',banned:'Banned'};
+  document.getElementById('info-content').innerHTML = `
+    <div>
+      <div class="flex items-center gap-3 pb-4 mb-4" style="border-bottom:1px solid var(--border)">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff">
+          ${b.nama ? b.nama[0].toUpperCase() : '?'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--text)">${b.nama || 'Belum diisi'}</div>
+          <div class="text-xs font-mono mt-0.5" style="color:var(--muted)">${b.bm_id || '—'}</div>
+        </div>
+        <span class="badge badge-${b.status}">${statusLabel[b.status]||b.status}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div class="rounded-xl p-3 col-span-2" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Owner Akun FB</div>
+          <div style="color:var(--text2)">${b.owner_nama||'—'}</div>
+        </div>
+        <div class="rounded-xl p-3 col-span-2" style="background:var(--hover)">
+          <div class="text-xs mb-1" style="color:var(--muted)">Tanggal Buat</div>
+          <div style="color:var(--text2)">${b.tgl_buat||'—'}</div>
+        </div>
+      </div>
+      ${b.catatan ? `<div class="mt-2 rounded-xl p-3" style="background:var(--hover)"><div class="text-xs mb-1" style="color:var(--muted)">Catatan</div><div style="color:var(--text2);white-space:pre-wrap">${b.catatan}</div></div>` : ''}
+      <div class="flex gap-2 mt-4">
+        <button onclick="document.getElementById('modal-info').classList.remove('show');openEdit(${b.id})" class="flex-1 py-2.5 rounded-xl text-sm font-medium btn-blue">Edit BM</button>
+        <button onclick="document.getElementById('modal-info').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Tutup</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-info').classList.add('show');
 }
 
 function openRiwayat(id) {

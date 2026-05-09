@@ -121,6 +121,9 @@
           <td class="px-4 py-3"><span class="badge badge-{{$fp.Status}}">{{title $fp.Status}}</span></td>
           <td class="px-4 py-3">
             <div class="flex gap-1 justify-end">
+              <button onclick="openInfo({{$fp.ID}})" title="Detail Info" class="p-1.5 rounded-lg" style="background:rgba(14,165,233,0.12);color:#38bdf8">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
               <button onclick="openRiwayat({{$fp.ID}})" title="Lihat Riwayat" class="p-1.5 rounded-lg btn-indigo">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </button>
@@ -175,6 +178,7 @@
         <div class="col-span-2"><span style="color:var(--muted)">Tgl Buat</span><br><span style="color:var(--text2)">{{if $fp.TglBuat}}{{$fp.TglBuat}}{{else}}—{{end}}</span></div>
       </div>
       <div class="flex gap-2">
+        <button onclick="openInfo({{$fp.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium" style="background:rgba(14,165,233,0.12);color:#38bdf8">Info</button>
         <button onclick="openRiwayat({{$fp.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-indigo">Riwayat</button>
         <button onclick="openEdit({{$fp.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-blue">Edit</button>
         <a href="/fanpage/hapus?id={{$fp.ID}}" onclick="return confirm('Hapus fanpage ini?')" class="flex-1 py-2 rounded-xl text-xs font-medium btn-red text-center">Hapus</a>
@@ -237,8 +241,13 @@
           <input type="date" name="tgl_buat" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
         </div>
         <div>
-          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Business Manager ID <span style="color:var(--muted);font-weight:400">(opsional)</span></label>
-          <input type="number" name="bm_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px" placeholder="ID BM (angka)" min="0">
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Business Manager <span style="color:var(--muted);font-weight:400">(opsional)</span></label>
+          <select name="bm_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            <option value="0">— Fanpage di dalam akun FB —</option>
+            {{range .BMList}}
+            <option value="{{.ID}}">{{.Nama}} ({{.BMID}})</option>
+            {{end}}
+          </select>
         </div>
       </div>
       <div>
@@ -285,6 +294,22 @@
   </div>
 </div>
 
+<!-- ── MODAL INFO ── -->
+<div id="modal-info" class="modal-wrap">
+  <div class="modal-box" style="max-width:480px">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Detail Fanpage</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Informasi lengkap fanpage ini</p>
+      </div>
+      <button onclick="document.getElementById('modal-info').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="info-content"></div>
+  </div>
+</div>
+
 <script>
 const fpData = {
   {{range $fp := .List}}
@@ -297,6 +322,8 @@ const fpData = {
     status: {{jsonStr $fp.Status}},
     tgl_buat: {{jsonStr $fp.TglBuat}},
     catatan: {{jsonStr $fp.Catatan}},
+    akun_fb_nama: {{jsonStr $fp.AkunFBNama}},
+    bm_nama: {{jsonStr $fp.BMNama}},
   },
   {{end}}
 };
@@ -304,6 +331,12 @@ const fpData = {
 const akunList = [
   {{range .AkunList}}
   {id: {{.ID}}, nama: {{jsonStr .Nama}}, fb_id: {{jsonStr .FBID}}},
+  {{end}}
+];
+
+const bmList = [
+  {{range .BMList}}
+  {id: {{.ID}}, nama: {{jsonStr .Nama}}, bm_id: {{jsonStr .BMID}}},
   {{end}}
 ];
 
@@ -328,7 +361,11 @@ function openEdit(id) {
           </select>
         </div>
         <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Tanggal Buat</label><input type="date" name="tgl_buat" value="${fp.tgl_buat}" class="w-full px-3 py-2 text-sm" style="border-radius:10px"></div>
-        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Business Manager ID</label><input type="number" name="bm_id" value="${fp.bm_id||''}" class="w-full px-3 py-2 text-sm" style="border-radius:10px" min="0" placeholder="ID BM (angka)"></div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Business Manager <span style="color:var(--muted);font-weight:400">(opsional)</span></label>
+          <select name="bm_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            <option value="0" ${fp.bm_id===0||!fp.bm_id?'selected':''}>— Fanpage di dalam akun FB —</option>
+            ${bmList.map(b=>`<option value="${b.id}" ${fp.bm_id===b.id?'selected':''}>${b.nama} (${b.bm_id})</option>`).join('')}
+          </select></div>
       </div>
       <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Catatan</label><textarea name="catatan" rows="2" class="w-full px-3 py-2 text-sm" style="border-radius:10px">${fp.catatan}</textarea></div>
       <div class="flex gap-2 pt-1">
@@ -337,6 +374,60 @@ function openEdit(id) {
       </div>
     </form>`;
   document.getElementById('modal-edit').classList.add('show');
+}
+
+function openInfo(id) {
+  const fp = fpData[id];
+  if (!fp) return;
+  const statusLabel = {aktif:'Aktif',nonaktif:'Nonaktif',banned:'Banned'};
+  const fbUrl = fp.page_id ? 'https://www.facebook.com/' + fp.page_id : null;
+
+  function fld(label, val) {
+    const v = val || '—';
+    return `<div class="rounded-xl p-3" style="background:var(--hover)">
+      <div class="text-xs mb-1" style="color:var(--muted)">${label}</div>
+      <div style="color:${val?'var(--text2)':'var(--muted)'};word-break:break-all">${v}</div>
+    </div>`;
+  }
+
+  document.getElementById('info-content').innerHTML = `
+    <div>
+      <div class="flex items-center gap-3 pb-4 mb-4" style="border-bottom:1px solid var(--border)">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">
+          ${fp.nama ? fp.nama[0].toUpperCase() : '?'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--text)">${fp.nama || 'Belum diisi'}</div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="text-xs font-mono" style="color:var(--muted)">${fp.page_id || '—'}</span>
+            ${fp.page_id ? `<button onclick="navigator.clipboard.writeText('${fp.page_id}').then(()=>showToast('Page ID disalin!','success'))" class="p-0.5 rounded" style="color:var(--muted)" title="Salin Page ID"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>` : ''}
+          </div>
+        </div>
+        <span class="badge badge-${fp.status}">${statusLabel[fp.status]||fp.status}</span>
+      </div>
+
+      ${fbUrl ? `<a href="${fbUrl}" target="_blank" rel="noopener" class="flex items-center gap-2 rounded-xl px-4 py-2.5 mb-3 text-sm font-medium" style="background:rgba(59,130,246,0.12);color:#60a5fa;text-decoration:none">
+        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+        Buka Fanpage di Facebook
+        <svg class="w-3.5 h-3.5 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>` : ''}
+
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        ${fld('Akun FB Terhubung', fp.akun_fb_nama)}
+        ${fld('Business Manager', fp.bm_nama)}
+        ${fld('Tanggal Buat', fp.tgl_buat)}
+        ${fld('Status', statusLabel[fp.status]||fp.status)}
+      </div>
+      <div class="mt-2 rounded-xl p-3" style="background:var(--hover)">
+        <div class="text-xs mb-1" style="color:var(--muted)">Catatan</div>
+        <div style="color:${fp.catatan?'var(--text2)':'var(--muted)'};white-space:pre-wrap;word-break:break-word">${fp.catatan||'—'}</div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="document.getElementById('modal-info').classList.remove('show');openEdit(${fp.id})" class="flex-1 py-2.5 rounded-xl text-sm font-medium btn-blue">Edit Fanpage</button>
+        <button onclick="document.getElementById('modal-info').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Tutup</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-info').classList.add('show');
 }
 
 function openRiwayat(id) {
