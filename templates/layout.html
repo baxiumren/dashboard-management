@@ -1,0 +1,463 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FB Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cause:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<style>
+  [data-theme="dark"]  { --bg:#0f1117; --sidebar:#161b27; --card:#1a2035; --border:#2a3350; --text:#e2e8f0; --text2:#94a3b8; --muted:#64748b; --input:#0f1117; --hover:rgba(59,130,246,0.06); }
+  [data-theme="light"] { --bg:#f0f4ff; --sidebar:#ffffff; --card:#ffffff; --border:#dde3f0; --text:#1e293b; --text2:#475569; --muted:#94a3b8; --input:#f8fafc; --hover:rgba(59,130,246,0.05); }
+  *{transition:background-color .2s,color .2s,border-color .2s}
+  body{background:var(--bg);color:var(--text);font-family:'Cause',system-ui,sans-serif;font-weight:400}
+  .sidebar{background:var(--sidebar);border-right:1px solid var(--border)}
+  .card{background:var(--card);border:1px solid var(--border)}
+  .nav-item{border-left:3px solid transparent;color:var(--text2);transition:all .15s}
+  .nav-item:hover{background:rgba(59,130,246,.08);color:#3b82f6}
+  .nav-item.active{background:rgba(59,130,246,.12);color:#3b82f6;border-left-color:#3b82f6}
+  .badge{font-size:11px;padding:2px 8px;border-radius:9999px;font-weight:600;white-space:nowrap}
+  .badge-aktif{background:rgba(34,197,94,.15);color:#4ade80}
+  .badge-checkpoint{background:rgba(234,179,8,.15);color:#fbbf24}
+  .badge-suspend{background:rgba(239,68,68,.15);color:#f87171}
+  .badge-kunci{background:rgba(139,92,246,.15);color:#c084fc}
+  .badge-selfie{background:rgba(6,182,212,.15);color:#22d3ee}
+  .badge-nonaktif{background:rgba(239,68,68,.1);color:#fca5a5}
+  .badge-banned{background:rgba(107,114,128,.15);color:#9ca3af}
+  .badge-ada{background:rgba(34,197,94,.12);color:#4ade80}
+  .badge-tidak{background:rgba(107,114,128,.12);color:#9ca3af}
+  [data-theme="light"] .badge-aktif{color:#16a34a}
+  [data-theme="light"] .badge-checkpoint{color:#b45309}
+  [data-theme="light"] .badge-suspend{color:#dc2626}
+  [data-theme="light"] .badge-kunci{color:#7c3aed}
+  [data-theme="light"] .badge-selfie{color:#0891b2}
+  [data-theme="light"] .badge-banned{color:#6b7280}
+  .btn-primary{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff}
+  .btn-primary:hover{opacity:.88}
+  .btn-blue{background:rgba(59,130,246,.1);color:#3b82f6}
+  .btn-red{background:rgba(239,68,68,.1);color:#ef4444}
+  .btn-indigo{background:rgba(99,102,241,.1);color:#6366f1}
+  input,select,textarea{background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:8px}
+  input:focus,select:focus,textarea:focus{border-color:#3b82f6;outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+  table{border-collapse:separate;border-spacing:0;width:100%}
+  tbody tr:hover td{background:var(--hover)}
+  tbody tr{border-bottom:1px solid var(--border)}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+  .theme-toggle{cursor:pointer;width:44px;height:24px;background:var(--border);border-radius:9999px;position:relative;flex-shrink:0}
+  .theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#3b82f6;transition:transform .2s}
+  [data-theme="light"] .theme-toggle::after{transform:translateX(20px)}
+  ::-webkit-scrollbar{width:5px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:9999px}
+  .hide-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
+  .hide-scrollbar::-webkit-scrollbar{display:none}
+  @media (max-width:767px){main .overflow-auto{padding-bottom:5rem}.stat-card{min-width:90px;flex-shrink:0}}
+  .bot-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:7px 4px 6px;font-size:10px;gap:3px;border:none;background:none;cursor:pointer;transition:color .15s;color:var(--text2);text-decoration:none;font-family:inherit}
+  .bot-nav-item.active{color:#3b82f6}
+  .bot-nav-item:hover{color:#3b82f6}
+  .fab{position:fixed;bottom:4.5rem;right:1rem;z-index:29;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(59,130,246,.45)}
+  #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40}
+  #overlay.show{display:block}
+  #sidebar-mobile{transform:translateX(-100%);transition:transform .25s;position:fixed;top:0;left:0;height:100%;width:240px;z-index:50}
+  #sidebar-mobile.open{transform:translateX(0)}
+  .modal-wrap{display:none;position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:16px}
+  .modal-wrap.show{display:flex}
+  .modal-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+  .tl-item{position:relative;padding-left:22px;padding-bottom:14px}
+  .tl-item::before{content:'';position:absolute;left:6px;top:10px;bottom:-4px;width:1px;background:var(--border)}
+  .tl-item:last-child::before{display:none}
+  .tl-dot{position:absolute;left:0;top:6px;width:13px;height:13px;border-radius:50%;border:2px solid}
+  .nav-dropdown .nav-submenu{max-height:0;overflow:hidden;transition:max-height .22s ease}
+  .nav-dropdown.open .nav-submenu{max-height:200px}
+  .dropdown-chevron{transition:transform .22s;flex-shrink:0}
+  .nav-dropdown.open .dropdown-chevron{transform:rotate(90deg)}
+  .field-error{border-color:#ef4444!important;box-shadow:0 0 0 3px rgba(239,68,68,.15)!important}
+  .field-error-msg{color:#ef4444;font-size:0.7rem;margin-top:3px;display:block}
+</style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+<!-- Mobile Topbar -->
+<header class="md:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0" style="background:var(--sidebar);border-color:var(--border)">
+  <button onclick="toggleSidebar()" style="color:var(--text)">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div class="flex items-center gap-2">
+    <svg viewBox="0 0 40 27" width="34" height="23" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg-t" x1="0" y1="0.5" x2="1" y2="0.5"><stop offset="0%" stop-color="#0064E0"/><stop offset="100%" stop-color="#00B4FF"/></linearGradient><mask id="mm-t"><path stroke="white" stroke-width="4.6" stroke-linecap="round" fill="none" d="M20,13.5 C19,9 15,6 10,6 C4,6 1,9.5 1,13.5 C1,17.5 4,21 10,21 C15,21 19,18 20,13.5 C21,9 25,6 30,6 C36,6 39,9.5 39,13.5 C39,17.5 36,21 30,21 C25,21 21,18 20,13.5 Z"/></mask></defs><rect width="40" height="27" fill="url(#mg-t)" mask="url(#mm-t)"/></svg>
+    <span class="font-bold text-sm" style="color:var(--text)">FB Manager</span>
+  </div>
+  <div class="ml-auto flex items-center gap-2">
+    <div class="theme-toggle" onclick="toggleTheme()"></div>
+  </div>
+</header>
+
+<div id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar Mobile -->
+<aside id="sidebar-mobile" class="sidebar flex flex-col md:hidden">
+  {{template "sidebar-nav" .}}
+</aside>
+
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar Desktop -->
+  <aside class="sidebar w-60 flex-col flex-shrink-0 hidden md:flex">
+    {{template "sidebar-nav" .}}
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    {{block "content" .}}{{end}}
+  </main>
+</div>
+
+<!-- ── LOADING SCREEN ── -->
+<div id="loading-screen" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);transition:opacity 0.4s ease">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
+    <!-- Meta Logo -->
+    <svg viewBox="0 0 200 133" width="130" height="87" xmlns="http://www.w3.org/2000/svg" style="animation:meta-breathe 2s ease-in-out infinite">
+      <defs>
+        <linearGradient id="mg-l" x1="0" y1="0.5" x2="1" y2="0.5"><stop offset="0%" stop-color="#0064E0"/><stop offset="100%" stop-color="#00B4FF"/></linearGradient>
+        <mask id="mm-l"><path stroke="white" stroke-width="23" stroke-linecap="round" fill="none" d="M100,66.5 C95,46 75,33 52,33 C25,33 4,48 4,66.5 C4,85 25,100 52,100 C75,100 95,87 100,66.5 C105,46 125,33 148,33 C175,33 196,48 196,66.5 C196,85 175,100 148,100 C125,100 105,87 100,66.5 Z"/></mask>
+      </defs>
+      <rect width="200" height="133" fill="url(#mg-l)" mask="url(#mm-l)"/>
+    </svg>
+    <!-- Cube Loader -->
+    <div class="cube"><div></div><div></div><div></div><div></div></div>
+    <p style="font-size:13px;color:var(--muted);letter-spacing:0.05em">Memuat dashboard...</p>
+  </div>
+</div>
+
+<style>
+@keyframes meta-breathe { 0%,100%{transform:scale(1);filter:drop-shadow(0 0 12px rgba(0,100,224,.5))} 50%{transform:scale(1.06);filter:drop-shadow(0 0 28px rgba(0,180,255,.85))} }
+@keyframes cubeRotate {
+  from { transform: rotateX(-25deg) rotateY(0deg); }
+  to   { transform: rotateX(-25deg) rotateY(360deg); }
+}
+.cube { width:34px;height:34px;transform-style:preserve-3d;animation:cubeRotate 1.8s infinite linear;position:relative; }
+.cube > div { position:absolute;width:34px;height:34px;border:1.5px solid rgba(99,102,241,0.5); }
+.cube > div:nth-child(1) { background:rgba(59,130,246,0.55); transform:translateZ(17px); }
+.cube > div:nth-child(2) { background:rgba(99,102,241,0.45); transform:rotateY(180deg) translateZ(17px); }
+.cube > div:nth-child(3) { background:rgba(59,130,246,0.35); transform:rotateY(-90deg) translateZ(17px); }
+.cube > div:nth-child(4) { background:rgba(99,102,241,0.35); transform:rotateY(90deg) translateZ(17px); }
+</style>
+
+<script src="/static/app.js"></script>
+<script>
+// Hide loading screen when page is ready
+window.addEventListener('load', function() {
+  const ls = document.getElementById('loading-screen');
+  ls.style.opacity = '0';
+  setTimeout(function() { ls.style.display = 'none'; }, 420);
+});
+
+// Show loading screen on navigation
+document.addEventListener('click', function(e) {
+  const a = e.target.closest('a');
+  if (a && a.href && !a.href.startsWith('#') && !a.target &&
+      a.href.indexOf('javascript') === -1 &&
+      !a.hasAttribute('onclick') &&
+      a.hostname === location.hostname) {
+    const ls = document.getElementById('loading-screen');
+    ls.style.display = 'flex';
+    ls.style.opacity = '1';
+  }
+});
+
+document.addEventListener('submit', function(e) {
+  const ls = document.getElementById('loading-screen');
+  ls.style.display = 'flex';
+  ls.style.opacity = '1';
+});
+</script>
+
+<!-- ── POPUP GANTI PASSWORD ── -->
+<div id="popup-password" style="display:{{if .Welcome}}flex{{else}}none{{end}};position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);padding:16px">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:400px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+    <!-- Close button -->
+    <button onclick="dismissPasswordPopup()" style="position:absolute;top:16px;right:16px;color:var(--muted);background:none;border:none;cursor:pointer;font-size:18px;line-height:1">✕</button>
+
+    <!-- Icon -->
+    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+      <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+
+    <!-- Text -->
+    <h2 style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Hei, ganti password dulu yuk!</h2>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">
+      Password kamu masih pakai default <strong style="color:var(--text)">admin123</strong>. Supaya data akun FB kamu aman, disarankan ganti password sekarang.<br><br>
+      Kalau belum mau, bisa ditutup dulu dan ganti kapanpun lewat menu <strong style="color:var(--text)">Pengaturan</strong>.
+    </p>
+
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px">
+      <button onclick="dismissPasswordPopup()" style="flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:500;background:var(--border);color:var(--text);border:none;cursor:pointer">
+        Nanti Saja
+      </button>
+      <a href="/settings" onclick="dismissPasswordPopup()" style="flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;text-align:center;text-decoration:none">
+        Ganti Sekarang
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+function dismissPasswordPopup() {
+  document.getElementById('popup-password').style.display = 'none';
+}
+</script>
+
+<!-- ── TOAST NOTIFICATION ── -->
+<div id="toast-container" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10001;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none"></div>
+
+<style>
+@keyframes toastIn  { from { opacity:0; transform:translateY(-16px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes toastOut { from { opacity:1; transform:translateY(0) scale(1); }        to { opacity:0; transform:translateY(-12px) scale(0.95); } }
+@keyframes toastProgress { from { width:100%; } to { width:0%; } }
+.toast {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 18px; border-radius:12px; min-width:260px; max-width:400px;
+  font-size:13px; font-weight:500;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
+  backdrop-filter:blur(14px);
+  pointer-events:auto;
+  animation:toastIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
+  border:1px solid;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+}
+.toast.hide { animation:toastOut .25s ease forwards; }
+.toast-bar {
+  position:absolute; bottom:0; left:0; height:2.5px;
+  border-radius:0 2px 2px 0;
+}
+.toast-success { background:rgba(16,185,129,0.13); border-color:rgba(16,185,129,0.28); color:#34d399; }
+.toast-error   { background:rgba(239,68,68,0.13);  border-color:rgba(239,68,68,0.28);  color:#f87171; }
+.toast-info    { background:rgba(59,130,246,0.13);  border-color:rgba(59,130,246,0.28);  color:#60a5fa; }
+.toast-success .toast-bar { background:#34d399; }
+.toast-error   .toast-bar { background:#f87171; }
+.toast-info    .toast-bar { background:#60a5fa; }
+[data-theme="light"] .toast-success { background:rgba(16,185,129,0.1); color:#059669; }
+[data-theme="light"] .toast-error   { background:rgba(239,68,68,0.1);  color:#dc2626; }
+[data-theme="light"] .toast-info    { background:rgba(59,130,246,0.1);  color:#2563eb; }
+</style>
+
+<script>
+// ── Baca ?t= param SEBELUM apapun, simpan ke var ──
+var _toastPending = null;
+(function() {
+  try {
+    var search = window.location.search;
+    var match = search.match(/[?&]t=([^&]+)/);
+    if (!match) return;
+    var t = match[1];
+    var msgs = {
+      tambah:  ['Data berhasil ditambahkan', 'success'],
+      edit:    ['Data berhasil diperbarui',  'success'],
+      hapus:   ['Data berhasil dihapus',     'info'],
+      import:  ['Import data berhasil',      'success'],
+      riwayat: ['Riwayat berhasil ditambah', 'success'],
+    };
+    if (msgs[t]) {
+      _toastPending = msgs[t];
+      // Bersihkan URL langsung
+      history.replaceState({}, '', window.location.pathname +
+        search.replace(/[?&]t=[^&]*/g, '').replace(/^&/, '?').replace(/^\?$/, ''));
+    }
+  } catch(e) {}
+})();
+
+var TOAST_DURATION = 7000;
+function showToast(message, type) {
+  type = type || 'success';
+  var icons = {
+    success: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>',
+    error:   '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>',
+    info:    '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+  };
+  var container = document.getElementById('toast-container');
+  if (!container) return;
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.innerHTML = icons[type] + '<span>' + message + '</span>'
+    + '<div class="toast-bar" style="animation:toastProgress ' + (TOAST_DURATION/1000) + 's linear forwards"></div>';
+  var dismissed = false;
+  function dismiss() {
+    if (dismissed) return;
+    dismissed = true;
+    clearTimeout(timer);
+    el.classList.add('hide');
+    setTimeout(function() { if (el.parentNode) el.remove(); }, 280);
+  }
+  el.addEventListener('click', dismiss);
+  container.appendChild(el);
+  var timer = setTimeout(dismiss, TOAST_DURATION);
+}
+
+// Tampilkan toast setelah loading screen selesai hilang
+window.addEventListener('load', function() {
+  if (_toastPending) {
+    var msg = _toastPending;
+    _toastPending = null;
+    setTimeout(function() { showToast(msg[0], msg[1]); }, 480);
+  }
+});
+</script>
+
+<!-- ── MODAL KONFIRMASI LOGOUT ── -->
+<div id="modal-logout" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);padding:16px">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+    <div style="width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="24" height="24" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    </div>
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Keluar dari Dashboard?</h3>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px">Kamu akan keluar dari sesi ini. Pastikan semua perubahan sudah tersimpan.</p>
+    <div style="display:flex;gap:10px">
+      <button onclick="document.getElementById('modal-logout').style.display='none'" style="flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:500;background:var(--border);color:var(--text);border:none;cursor:pointer">Batal</button>
+      <a href="/logout" style="flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;text-align:center;text-decoration:none;display:block">Ya, Keluar</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmLogout() {
+  var m = document.getElementById('modal-logout');
+  m.style.display = 'flex';
+  m.addEventListener('click', function(e) { if (e.target === m) m.style.display = 'none'; }, { once: true });
+}
+
+function validateForm(form) {
+  var valid = true;
+  form.querySelectorAll('[required]').forEach(function(el) {
+    el.classList.remove('field-error');
+    var prev = el.nextElementSibling;
+    if (prev && prev.classList.contains('field-error-msg')) prev.remove();
+    if (!el.value.trim()) {
+      el.classList.add('field-error');
+      var msg = document.createElement('span');
+      msg.className = 'field-error-msg';
+      msg.textContent = 'Kolom ini wajib diisi';
+      el.insertAdjacentElement('afterend', msg);
+      if (valid) el.focus();
+      valid = false;
+    }
+  });
+  return valid;
+}
+document.addEventListener('submit', function(e) {
+  if (e.target.classList.contains('validate-form')) {
+    if (!validateForm(e.target)) e.preventDefault();
+  }
+});
+document.addEventListener('input', function(e) {
+  if (e.target.classList.contains('field-error')) {
+    e.target.classList.remove('field-error');
+    var msg = e.target.nextElementSibling;
+    if (msg && msg.classList.contains('field-error-msg')) msg.remove();
+  }
+});
+</script>
+
+<!-- Bottom Navigation (mobile only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t" style="background:var(--sidebar);border-color:var(--border)">
+  <div class="flex" style="padding-bottom:env(safe-area-inset-bottom,0px)">
+    <a href="/akun-fb" class="bot-nav-item {{if eq .Page "akun-fb"}}active{{end}}">
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      <span>Akun FB</span>
+    </a>
+    <a href="/fanpage" class="bot-nav-item {{if eq .Page "fanpage"}}active{{end}}">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/></svg>
+      <span>Fanpage</span>
+    </a>
+    <a href="/bm" class="bot-nav-item {{if eq .Page "bm"}}active{{end}}">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      <span>BM</span>
+    </a>
+    <a href="/akun-iklan" class="bot-nav-item {{if eq .Page "akun-iklan"}}active{{end}}">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+      <span>Iklan</span>
+    </a>
+    <button type="button" onclick="toggleSidebar()" class="bot-nav-item">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <span>Menu</span>
+    </button>
+  </div>
+</nav>
+</body>
+</html>
+{{end}}
+
+{{define "sidebar-nav"}}
+<div class="px-5 py-5 border-b" style="border-color:var(--border)">
+  <div class="flex items-center gap-3">
+    <svg viewBox="0 0 40 27" width="38" height="25" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg-s" x1="0" y1="0.5" x2="1" y2="0.5"><stop offset="0%" stop-color="#0064E0"/><stop offset="100%" stop-color="#00B4FF"/></linearGradient><mask id="mm-s"><path stroke="white" stroke-width="4.6" stroke-linecap="round" fill="none" d="M20,13.5 C19,9 15,6 10,6 C4,6 1,9.5 1,13.5 C1,17.5 4,21 10,21 C15,21 19,18 20,13.5 C21,9 25,6 30,6 C36,6 39,9.5 39,13.5 C39,17.5 36,21 30,21 C25,21 21,18 20,13.5 Z"/></mask></defs><rect width="40" height="27" fill="url(#mg-s)" mask="url(#mm-s)"/></svg>
+    <div>
+      <div class="font-bold text-sm" style="color:var(--text)">FB Manager</div>
+      <div class="text-xs" style="color:var(--muted)">Ads Account Dashboard</div>
+    </div>
+  </div>
+</div>
+<nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+  <div class="text-xs font-semibold uppercase tracking-wider px-3 mb-3" style="color:var(--muted)">Menu</div>
+  <a href="/akun-fb" class="nav-item {{if eq .Page "akun-fb"}}active{{end}} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer">
+    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+    Akun FB
+  </a>
+  <a href="/fanpage" class="nav-item {{if eq .Page "fanpage"}}active{{end}} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/></svg>
+    Fanpage
+  </a>
+  <a href="/bm" class="nav-item {{if eq .Page "bm"}}active{{end}} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    Business Manager
+  </a>
+  <a href="/akun-iklan" class="nav-item {{if eq .Page "akun-iklan"}}active{{end}} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+    Akun Iklan
+  </a>
+  <a href="/pixel" class="nav-item {{if eq .Page "pixel"}}active{{end}} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v3m0 14v3M2 12h3m14 0h3m-3.343-6.657l-2.121 2.121M8.464 15.536l-2.121 2.121m0-12.728l2.121 2.121m6.87 9.092l2.121 2.121"/></svg>
+    Pixel
+  </a>
+  <div class="text-xs font-semibold uppercase tracking-wider px-3 mt-5 mb-3" style="color:var(--muted)">Lainnya</div>
+  <a href="/rekap" class="nav-item {{if eq .Page "rekap"}}active{{end}} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    Rekap / Summary
+  </a>
+  <div class="nav-dropdown {{if eq .Page "settings"}}open{{end}}">
+    <button type="button" onclick="this.closest('.nav-dropdown').classList.toggle('open')"
+      class="nav-item w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{if eq .Page "settings"}}active{{end}}"
+      style="border:none;cursor:pointer;background:none;font-family:inherit">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>Pengaturan</span>
+      <svg class="dropdown-chevron ml-auto w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <div class="nav-submenu">
+      <a href="/settings" class="nav-item flex items-center gap-2 pl-9 pr-3 py-2 rounded-lg text-xs" style="color:var(--text2)">
+        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        Ganti Password
+      </a>
+      <a href="/settings?tab=sesi" class="nav-item flex items-center gap-2 pl-9 pr-3 py-2 rounded-lg text-xs" style="color:var(--text2)">
+        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"/></svg>
+        Durasi Sesi
+      </a>
+    </div>
+  </div>
+</nav>
+<div class="px-4 py-3 border-t flex items-center gap-3 justify-between" style="border-color:var(--border)">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full btn-primary flex items-center justify-center text-xs font-bold">A</div>
+    <div><div class="text-sm font-medium" style="color:var(--text)">Admin</div></div>
+  </div>
+  <div class="flex items-center gap-2">
+    <div class="theme-toggle hidden md:block" onclick="toggleTheme()"></div>
+    <button onclick="confirmLogout()" title="Logout" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;display:flex">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    </button>
+  </div>
+</div>
+{{end}}

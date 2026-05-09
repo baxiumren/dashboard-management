@@ -1,0 +1,336 @@
+{{template "layout" .}}
+
+{{define "content"}}
+<!-- Topbar Desktop -->
+<header class="hidden md:flex px-6 py-4 border-b items-center gap-4 flex-shrink-0" style="border-color:var(--border);background:var(--sidebar)">
+  <div>
+    <h1 class="text-lg font-bold" style="color:var(--text)">Business Manager</h1>
+    <p class="text-xs" style="color:var(--muted)">Kelola semua Business Manager yang terhubung ke akun FB</p>
+  </div>
+  <div class="ml-auto flex items-center gap-2">
+    <form method="GET" action="/bm" class="flex gap-2">
+      <div class="relative">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" name="search" value="{{.Search}}" placeholder="Cari nama / BM ID..." class="pl-9 pr-4 py-2 text-sm w-56" style="border-radius:10px">
+      </div>
+      <select name="status" class="px-3 py-2 text-sm" style="border-radius:10px" onchange="this.form.submit()">
+        <option value="">Semua Status</option>
+        <option value="aktif"    {{if eq .StatusFilter "aktif"   }}selected{{end}}>Aktif</option>
+        <option value="disabled" {{if eq .StatusFilter "disabled"}}selected{{end}}>Disabled</option>
+        <option value="banned"   {{if eq .StatusFilter "banned"  }}selected{{end}}>Banned</option>
+      </select>
+      <button type="submit" class="px-4 py-2 rounded-xl text-xs btn-blue font-medium">Cari</button>
+    </form>
+    <button onclick="document.getElementById('modal-tambah').classList.add('show')" class="btn-primary px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Tambah BM
+    </button>
+  </div>
+</header>
+
+<!-- Mobile Topbar -->
+<div class="md:hidden px-4 pt-3 pb-2 flex gap-2 flex-shrink-0">
+  <form method="GET" action="/bm" class="flex gap-2 w-full">
+    <div class="relative flex-1">
+      <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" name="search" value="{{.Search}}" placeholder="Cari..." class="pl-9 pr-4 py-2 text-sm w-full" style="border-radius:10px">
+    </div>
+    <select name="status" class="px-2 py-2 text-xs" style="border-radius:10px" onchange="this.form.submit()">
+      <option value="">Semua</option>
+      <option value="aktif">Aktif</option>
+      <option value="disabled">Disabled</option>
+      <option value="banned">Banned</option>
+    </select>
+  </form>
+</div>
+
+<!-- Stats Cards -->
+<div class="px-4 md:px-6 py-4 flex-shrink-0">
+<div class="flex gap-3 overflow-x-auto hide-scrollbar md:grid md:grid-cols-4 md:overflow-visible pb-1 md:pb-0">
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #3b82f6">
+    <div class="text-xs font-medium mb-1" style="color:var(--muted)">Total BM</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Total}}</div>
+  </div>
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #22c55e">
+    <div class="text-xs font-medium mb-1" style="color:#4ade80">Aktif</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Aktif}}</div>
+  </div>
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #f59e0b">
+    <div class="text-xs font-medium mb-1" style="color:#fbbf24">Disabled</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Disabled}}</div>
+  </div>
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #6b7280">
+    <div class="text-xs font-medium mb-1" style="color:#9ca3af">Banned</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Banned}}</div>
+  </div>
+</div>
+</div>
+
+<!-- FAB (mobile only) -->
+<button type="button" class="md:hidden fab btn-primary" onclick="document.getElementById('modal-tambah').classList.add('show')">
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+</button>
+
+<!-- Content Area -->
+<div class="flex-1 overflow-auto px-4 md:px-6 pb-6">
+
+  <!-- Desktop Table -->
+  <div class="hidden md:block card rounded-2xl overflow-hidden">
+    <table>
+      <thead>
+        <tr style="background:var(--hover)">
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted);width:40px">#</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Business Manager</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Owner Akun FB</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Tgl Buat</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Status</th>
+          <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-right" style="color:var(--muted)">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range $i, $b := .List}}
+        <tr style="border-top:1px solid var(--border)">
+          <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{inc $i}}</td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff">
+                {{if $b.Nama}}{{slice $b.Nama 0 1}}{{else}}?{{end}}
+              </div>
+              <div>
+                <div class="text-sm font-semibold" style="color:var(--text)">{{if $b.Nama}}{{$b.Nama}}{{else}}<span style="color:var(--muted);font-weight:400">Belum diisi</span>{{end}}</div>
+                <div class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{$b.BMID}}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            {{if $b.OwnerNama}}
+              <span class="text-xs font-medium" style="color:var(--text2)">{{$b.OwnerNama}}</span>
+            {{else}}
+              <span class="text-xs" style="color:var(--muted)">—</span>
+            {{end}}
+          </td>
+          <td class="px-4 py-3 text-xs" style="color:var(--text2)">{{if $b.TglBuat}}{{$b.TglBuat}}{{else}}<span style="color:var(--muted)">—</span>{{end}}</td>
+          <td class="px-4 py-3"><span class="badge badge-{{$b.Status}}">{{title $b.Status}}</span></td>
+          <td class="px-4 py-3">
+            <div class="flex gap-1 justify-end">
+              <button onclick="openRiwayat({{$b.ID}})" title="Lihat Riwayat" class="p-1.5 rounded-lg btn-indigo">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </button>
+              <button onclick="openEdit({{$b.ID}})" title="Edit BM" class="p-1.5 rounded-lg btn-blue">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <a href="/bm/hapus?id={{$b.ID}}" onclick="return confirm('Hapus BM ini? Tindakan ini tidak bisa dibatalkan.')" title="Hapus" class="p-1.5 rounded-lg btn-red">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="6" class="px-4 py-16 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:var(--hover)">
+                <svg class="w-7 h-7" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium" style="color:var(--text)">Belum ada Business Manager</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">Tambah BM yang digunakan untuk mengelola akun iklan</p>
+              </div>
+              <button onclick="document.getElementById('modal-tambah').classList.add('show')" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium mt-1">+ Tambah BM</button>
+            </div>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile Cards -->
+  <div class="md:hidden space-y-3 mt-1">
+    {{range $b := .List}}
+    <div class="card rounded-2xl p-4">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff">
+            {{if $b.Nama}}{{slice $b.Nama 0 1}}{{else}}?{{end}}
+          </div>
+          <div>
+            <div class="font-semibold text-sm" style="color:var(--text)">{{if $b.Nama}}{{$b.Nama}}{{else}}<span style="color:var(--muted);font-weight:400">Belum diisi</span>{{end}}</div>
+            <div class="font-mono text-xs mt-0.5" style="color:var(--muted)">{{$b.BMID}}</div>
+          </div>
+        </div>
+        <span class="badge badge-{{$b.Status}}">{{title $b.Status}}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div><span style="color:var(--muted)">Owner Akun FB</span><br><span style="color:var(--text2)">{{if $b.OwnerNama}}{{$b.OwnerNama}}{{else}}—{{end}}</span></div>
+        <div><span style="color:var(--muted)">Tgl Buat</span><br><span style="color:var(--text2)">{{if $b.TglBuat}}{{$b.TglBuat}}{{else}}—{{end}}</span></div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="openRiwayat({{$b.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-indigo">Riwayat</button>
+        <button onclick="openEdit({{$b.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-blue">Edit</button>
+        <a href="/bm/hapus?id={{$b.ID}}" onclick="return confirm('Hapus BM ini?')" class="flex-1 py-2 rounded-xl text-xs font-medium btn-red text-center">Hapus</a>
+      </div>
+    </div>
+    {{else}}
+    <div class="card rounded-2xl p-8 text-center">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background:var(--hover)">
+        <svg class="w-6 h-6" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      </div>
+      <p class="text-sm font-medium mb-1" style="color:var(--text)">Belum ada BM</p>
+      <p class="text-xs mb-4" style="color:var(--muted)">Tambah Business Manager untuk keperluan iklan</p>
+      <button onclick="document.getElementById('modal-tambah').classList.add('show')" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium">+ Tambah BM</button>
+    </div>
+    {{end}}
+  </div>
+</div>
+
+<!-- ── MODAL TAMBAH ── -->
+<div id="modal-tambah" class="modal-wrap">
+  <div class="modal-box" style="max-width:480px">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Tambah Business Manager</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Isi data BM yang ingin ditambahkan</p>
+      </div>
+      <button onclick="document.getElementById('modal-tambah').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="POST" action="/bm/tambah" class="space-y-3 validate-form">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Nama BM <span style="color:#f87171">*</span></label>
+          <input type="text" name="nama" class="w-full px-3 py-2 text-sm" style="border-radius:10px" placeholder="Nama business manager" required>
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">BM ID <span style="color:#f87171">*</span></label>
+          <input type="text" name="bm_id" class="w-full px-3 py-2 text-sm font-mono" style="border-radius:10px" placeholder="123456789012345" required>
+        </div>
+        <div class="col-span-2">
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Owner Akun FB</label>
+          <select name="owner_akun_fb_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            <option value="0">— Pilih Akun FB Owner —</option>
+            {{range .AkunList}}
+            <option value="{{.ID}}">{{.Nama}} ({{.FBID}})</option>
+            {{end}}
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Status</label>
+          <select name="status" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            <option value="aktif">✅ Aktif</option>
+            <option value="disabled">⚠️ Disabled</option>
+            <option value="banned">⛔ Banned</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Tanggal Buat</label>
+          <input type="date" name="tgl_buat" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Catatan</label>
+        <textarea name="catatan" rows="2" class="w-full px-3 py-2 text-sm" style="border-radius:10px" placeholder="Catatan tambahan..."></textarea>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="document.getElementById('modal-tambah').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Batal</button>
+        <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold btn-primary">Simpan BM</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL EDIT ── -->
+<div id="modal-edit" class="modal-wrap">
+  <div class="modal-box" style="max-width:480px">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Edit Business Manager</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Perbarui data Business Manager</p>
+      </div>
+      <button onclick="document.getElementById('modal-edit').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="edit-form-container"></div>
+  </div>
+</div>
+
+<!-- ── MODAL RIWAYAT ── -->
+<div id="modal-riwayat" class="modal-wrap">
+  <div class="modal-box" style="max-width:480px">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Riwayat Business Manager</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Histori aktivitas BM ini</p>
+      </div>
+      <button onclick="document.getElementById('modal-riwayat').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="riwayat-container"></div>
+  </div>
+</div>
+
+<script>
+const bmData = {
+  {{range $b := .List}}
+  {{$b.ID}}: {
+    id: {{$b.ID}},
+    nama: {{jsonStr $b.Nama}},
+    bm_id: {{jsonStr $b.BMID}},
+    owner_akun_fb_id: {{$b.OwnerAkunFBID}},
+    status: {{jsonStr $b.Status}},
+    tgl_buat: {{jsonStr $b.TglBuat}},
+    catatan: {{jsonStr $b.Catatan}},
+  },
+  {{end}}
+};
+
+const akunList = [
+  {{range .AkunList}}
+  {id: {{.ID}}, nama: {{jsonStr .Nama}}, fb_id: {{jsonStr .FBID}}},
+  {{end}}
+];
+
+function openEdit(id) {
+  const b = bmData[id];
+  if (!b) return;
+  const statusOpts = ['aktif','disabled','banned'];
+  const statusLabels = {'aktif':'✅ Aktif','disabled':'⚠️ Disabled','banned':'⛔ Banned'};
+  const akunOptions = '<option value="0">— Pilih Akun FB Owner —</option>' +
+    akunList.map(a => `<option value="${a.id}" ${b.owner_akun_fb_id===a.id?'selected':''}>${a.nama} (${a.fb_id})</option>`).join('');
+  document.getElementById('edit-form-container').innerHTML = `
+    <form method="POST" action="/bm/edit?id=${b.id}" class="space-y-3 validate-form">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Nama BM</label><input type="text" name="nama" value="${b.nama}" class="w-full px-3 py-2 text-sm" style="border-radius:10px" required></div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">BM ID</label><input type="text" name="bm_id" value="${b.bm_id}" class="w-full px-3 py-2 text-sm font-mono" style="border-radius:10px" required></div>
+        <div class="col-span-2"><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Owner Akun FB</label>
+          <select name="owner_akun_fb_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px">${akunOptions}</select>
+        </div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Status</label>
+          <select name="status" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            ${statusOpts.map(s=>`<option value="${s}" ${b.status===s?'selected':''}>${statusLabels[s]}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Tanggal Buat</label><input type="date" name="tgl_buat" value="${b.tgl_buat}" class="w-full px-3 py-2 text-sm" style="border-radius:10px"></div>
+      </div>
+      <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Catatan</label><textarea name="catatan" rows="2" class="w-full px-3 py-2 text-sm" style="border-radius:10px">${b.catatan}</textarea></div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="document.getElementById('modal-edit').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Batal</button>
+        <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold btn-primary">Simpan Perubahan</button>
+      </div>
+    </form>`;
+  document.getElementById('modal-edit').classList.add('show');
+}
+
+function openRiwayat(id) {
+  fetch('/bm/riwayat?id=' + id, {headers:{'X-Fragment':'1'}})
+    .then(r => r.text())
+    .then(html => {
+      document.getElementById('riwayat-container').innerHTML = html;
+      document.getElementById('modal-riwayat').classList.add('show');
+    });
+}
+</script>
+{{end}}

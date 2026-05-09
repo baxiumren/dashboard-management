@@ -1,0 +1,16 @@
+{{template "layout" .}}
+{{define "content"}}
+<header class="hidden md:flex px-6 py-4 border-b items-center gap-4 flex-shrink-0" style="border-color:var(--border);background:var(--sidebar)">
+  <div>
+    <h1 class="text-lg font-bold" style="color:var(--text)">{{.Section}}</h1>
+    <p class="text-xs" style="color:var(--muted)">Modul ini sedang dalam pengembangan</p>
+  </div>
+</header>
+<div class="flex-1 flex items-center justify-center">
+  <div class="text-center">
+    <div class="text-4xl mb-4">🔧</div>
+    <div class="text-lg font-semibold mb-2" style="color:var(--text)">{{.Section}}</div>
+    <div class="text-sm" style="color:var(--muted)">Modul ini akan segera tersedia.</div>
+  </div>
+</div>
+{{end}}

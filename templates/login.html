@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — FB Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cause:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Cause', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    display: flex;
+    background: #f0f4ff;
+  }
+
+  /* ── Left Panel ── */
+  .left-panel {
+    width: 52%;
+    background: linear-gradient(145deg, #1e3a8a 0%, #2563eb 45%, #4f46e5 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 48px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .left-panel::before {
+    content: '';
+    position: absolute;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    top: -120px; right: -100px;
+  }
+  .left-panel::after {
+    content: '';
+    position: absolute;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    bottom: -80px; left: -60px;
+  }
+  .left-content { position: relative; z-index: 1; width: 100%; max-width: 380px; }
+
+  .brand-logo {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700; color: #fff;
+    margin-bottom: 32px;
+  }
+  .left-title { font-size: 32px; font-weight: 700; color: #fff; line-height: 1.2; margin-bottom: 12px; }
+  .left-sub   { font-size: 15px; color: rgba(255,255,255,0.65); line-height: 1.7; margin-bottom: 48px; }
+
+  .feature-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 12px;
+  }
+  .feature-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .feature-label { font-size: 13px; font-weight: 600; color: #fff; }
+  .feature-desc  { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+  /* ── Right Panel ── */
+  .right-panel {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 48px 40px;
+    background: #fff;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .theme-btn {
+    position: absolute; top: 20px; right: 20px;
+    width: 38px; height: 38px; border-radius: 10px;
+    border: 1.5px solid #e2e8f0; background: #f8fafc;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: #64748b; transition: all 0.2s;
+  }
+  .theme-btn:hover { background: #eff6ff; color: #3b82f6; border-color: #bfdbfe; }
+
+  .form-wrap { width: 100%; max-width: 360px; }
+
+  .form-logo {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg,#3b82f6,#6366f1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #fff;
+    margin-bottom: 24px;
+  }
+
+  .form-title { font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 6px; transition: color 0.2s; }
+  .form-sub   { font-size: 14px; color: #94a3b8; margin-bottom: 32px; }
+
+  .field-label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; letter-spacing: 0.02em; transition: color 0.2s; }
+
+  .field-wrap { position: relative; margin-bottom: 16px; }
+
+  .field-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: #cbd5e1; pointer-events: none;
+  }
+
+  .field-input {
+    width: 100%; padding: 12px 14px 12px 42px;
+    border: 1.5px solid #e2e8f0; border-radius: 12px;
+    font-size: 14px; color: #0f172a; background: #f8fafc;
+    outline: none; transition: all 0.2s; font-family: inherit;
+  }
+  .field-input::placeholder { color: #cbd5e1; }
+  .field-input:focus {
+    border-color: #3b82f6; background: #fff;
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+  }
+
+  .toggle-pass {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: #cbd5e1; padding: 2px;
+    display: flex; align-items: center; transition: color 0.15s;
+  }
+  .toggle-pass:hover { color: #64748b; }
+
+  .btn-login {
+    width: 100%; padding: 13px; border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff; font-size: 15px; font-weight: 600;
+    border: none; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: inherit;
+  }
+  .btn-login:hover  { opacity: 0.9; }
+  .btn-login:active { transform: scale(0.99); }
+
+  .error-box {
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 13px; color: #dc2626;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+
+  .divider {
+    text-align: center; font-size: 12px; color: #e2e8f0;
+    margin-top: 28px; padding-top: 24px; border-top: 1px solid #f1f5f9;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  /* ── CAPTCHA ── */
+  .captcha-wrap {
+    display: flex; align-items: center; gap: 10px;
+    background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 12px; padding: 10px 14px;
+    margin-bottom: 16px; transition: border-color 0.2s, background 0.2s;
+  }
+  .captcha-wrap:focus-within { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
+  .captcha-question {
+    font-size: 14px; font-weight: 700; color: #3b82f6;
+    background: rgba(59,130,246,0.1); border-radius: 8px;
+    padding: 6px 12px; white-space: nowrap; flex-shrink: 0;
+    letter-spacing: 0.5px;
+  }
+  .captcha-eq { font-size: 14px; color: #94a3b8; flex-shrink: 0; }
+  .captcha-input {
+    flex: 1; border: none; background: transparent; outline: none;
+    font-size: 15px; font-weight: 600; color: #0f172a;
+    font-family: inherit; min-width: 0; text-align: center;
+  }
+  .captcha-input::placeholder { color: #cbd5e1; font-weight: 400; }
+  .captcha-refresh {
+    background: none; border: none; cursor: pointer; padding: 4px;
+    color: #cbd5e1; transition: color 0.15s; flex-shrink: 0;
+    display: flex; align-items: center;
+  }
+  .captcha-refresh:hover { color: #3b82f6; }
+  .captcha-error {
+    font-size: 12px; font-weight: 500; color: #ef4444;
+    margin-top: 6px; margin-bottom: 4px;
+    display: none; padding: 6px 10px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px;
+  }
+
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .shake { animation: shake 0.4s ease; }
+
+  @keyframes slideDown {
+    from{opacity:0;transform:translateY(-8px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .error-box { animation: slideDown 0.3s ease; }
+
+  /* ── Dark Mode ── */
+  body.dark { background: #0f1117; }
+  body.dark .right-panel  { background: #161b27; }
+  body.dark .form-title   { color: #e2e8f0; }
+  body.dark .form-sub     { color: #64748b; }
+  body.dark .field-label  { color: #94a3b8; }
+  body.dark .field-input  { background: #0f1117; border-color: #2a3350; color: #e2e8f0; }
+  body.dark .field-input:focus { background: #1a2035; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }
+  body.dark .field-input::placeholder { color: #3d4f72; }
+  body.dark .field-icon   { color: #3d4f72; }
+  body.dark .toggle-pass  { color: #3d4f72; }
+  body.dark .toggle-pass:hover { color: #94a3b8; }
+  body.dark .theme-btn    { background: #1a2035; border-color: #2a3350; color: #64748b; }
+  body.dark .theme-btn:hover { background: #1e2d4a; color: #3b82f6; border-color: #3b82f6; }
+  body.dark .divider      { color: #2a3350; border-color: #1e2a40; }
+  body.dark .error-box    { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); color: #f87171; }
+  body.dark .captcha-error { color: #f87171; background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); }
+  body.dark .captcha-wrap { background: #0f1117; border-color: #2a3350; }
+  body.dark .captcha-wrap:focus-within { background: #1a2035; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }
+  body.dark .captcha-input { color: #e2e8f0; }
+  body.dark .captcha-input::placeholder { color: #3d4f72; }
+
+  .captcha-digit {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 42px; border-radius: 10px;
+    font-size: 22px; font-weight: 800; color: #3b82f6;
+    background: rgba(59,130,246,0.1);
+    border: 1.5px solid rgba(59,130,246,0.2);
+    letter-spacing: 0; font-variant-numeric: tabular-nums;
+  }
+  body.dark .captcha-digit { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); }
+
+  /* Loading screen */
+  #ls {
+    position: fixed; inset: 0; z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.35s;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes cubeRotate {
+    from { transform: rotateX(-25deg) rotateY(0deg); }
+    to   { transform: rotateX(-25deg) rotateY(360deg); }
+  }
+  .cube { width:34px;height:34px;transform-style:preserve-3d;animation:cubeRotate 1.8s infinite linear;position:relative; }
+  .cube > div { position:absolute;width:34px;height:34px;border:1.5px solid rgba(99,102,241,0.5); }
+  .cube > div:nth-child(1) { background:rgba(59,130,246,0.55); transform:translateZ(17px); }
+  .cube > div:nth-child(2) { background:rgba(99,102,241,0.45); transform:rotateY(180deg) translateZ(17px); }
+  .cube > div:nth-child(3) { background:rgba(59,130,246,0.35); transform:rotateY(-90deg) translateZ(17px); }
+  .cube > div:nth-child(4) { background:rgba(99,102,241,0.35); transform:rotateY(90deg) translateZ(17px); }
+
+  @media (max-width: 768px) {
+    .left-panel { display: none; }
+    .right-panel { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="ls" style="background:#fff">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
+    <svg viewBox="0 0 200 133" width="90" height="60" xmlns="http://www.w3.org/2000/svg" style="animation:cubeRotate 0s;filter:drop-shadow(0 0 14px rgba(0,100,224,.55))">
+      <defs>
+        <linearGradient id="mg-ls" x1="0" y1="0.5" x2="1" y2="0.5"><stop offset="0%" stop-color="#0064E0"/><stop offset="100%" stop-color="#00B4FF"/></linearGradient>
+        <mask id="mm-ls"><path stroke="white" stroke-width="23" stroke-linecap="round" fill="none" d="M100,66.5 C95,46 75,33 52,33 C25,33 4,48 4,66.5 C4,85 25,100 52,100 C75,100 95,87 100,66.5 C105,46 125,33 148,33 C175,33 196,48 196,66.5 C196,85 175,100 148,100 C125,100 105,87 100,66.5 Z"/></mask>
+      </defs>
+      <rect width="200" height="133" fill="url(#mg-ls)" mask="url(#mm-ls)"/>
+    </svg>
+    <div class="cube"><div></div><div></div><div></div><div></div></div>
+  </div>
+</div>
+
+<!-- ── Left Panel (Branding) ── -->
+<div class="left-panel">
+  <div class="left-content">
+    <div class="brand-logo">
+      <svg viewBox="0 0 200 133" width="38" height="25" xmlns="http://www.w3.org/2000/svg">
+        <path stroke="white" stroke-width="23" stroke-linecap="round" fill="none" d="M100,66.5 C95,46 75,33 52,33 C25,33 4,48 4,66.5 C4,85 25,100 52,100 C75,100 95,87 100,66.5 C105,46 125,33 148,33 C175,33 196,48 196,66.5 C196,85 175,100 148,100 C125,100 105,87 100,66.5 Z"/>
+      </svg>
+    </div>
+    <div class="left-title">FB Ads<br>Manager</div>
+    <div class="left-sub">Platform terpusat untuk mengelola akun Facebook, Fanpage, Business Manager, dan Akun Iklan kamu dengan aman dan terorganisir.</div>
+
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(34,197,94,0.18)">
+        <svg width="18" height="18" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <div>
+        <div class="feature-label">Enkripsi AES-256</div>
+        <div class="feature-desc">Password & cookie disimpan terenkripsi end-to-end</div>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(251,191,36,0.18)">
+        <svg width="18" height="18" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <div>
+        <div class="feature-label">Rekap & Statistik</div>
+        <div class="feature-desc">Pantau status semua aset Facebook dalam satu halaman</div>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(139,92,246,0.18)">
+        <svg width="18" height="18" fill="none" stroke="#c084fc" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div>
+        <div class="feature-label">Riwayat Kejadian</div>
+        <div class="feature-desc">Catat CP, suspend, banned, selfie, dan pemulihan akun</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Right Panel (Form) ── -->
+<div class="right-panel">
+
+  <!-- Theme toggle button -->
+  <button class="theme-btn" onclick="toggleDark()" title="Ganti tema terang / gelap">
+    <svg id="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+    <svg id="icon-sun"  width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+  </button>
+
+  <div class="form-wrap">
+    <div class="form-logo">
+      <svg viewBox="-14 20 228 93" width="32" height="21" xmlns="http://www.w3.org/2000/svg">
+        <path stroke="white" stroke-width="23" stroke-linecap="round" fill="none" d="M100,66.5 C95,46 75,33 52,33 C25,33 4,48 4,66.5 C4,85 25,100 52,100 C75,100 95,87 100,66.5 C105,46 125,33 148,33 C175,33 196,48 196,66.5 C196,85 175,100 148,100 C125,100 105,87 100,66.5 Z"/>
+      </svg>
+    </div>
+    <div class="form-title">Selamat datang 👋</div>
+    <div class="form-sub">Masuk ke dashboard FB Manager kamu</div>
+
+    {{if .Error}}
+    <div class="error-box">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      {{.Error}}
+    </div>
+    {{end}}
+
+    <form method="POST" action="/login" id="login-form">
+      <div>
+        <label class="field-label">Username</label>
+        <div class="field-wrap">
+          <svg class="field-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <input type="text" name="username" class="field-input" placeholder="Masukkan username" autocomplete="username" required autofocus>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <svg class="field-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <input type="password" name="password" id="pass-input" class="field-input" style="padding-right:42px" placeholder="Masukkan password" autocomplete="current-password" required>
+          <button type="button" class="toggle-pass" onclick="togglePass()" tabindex="-1">
+            <svg id="eye-off" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <svg id="eye-on"  width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- CAPTCHA: Hitung -->
+      <div>
+        <label class="field-label">Verifikasi: Berapa hasilnya?</label>
+        <div class="captcha-wrap">
+          <span class="captcha-question" id="captcha-q">? + ?</span>
+          <span class="captcha-eq">=</span>
+          <input type="text" id="captcha-ans" class="captcha-input" placeholder="Jawab di sini" inputmode="numeric" autocomplete="off" oninput="clearCaptchaErr()">
+          <button type="button" class="captcha-refresh" onclick="genCaptcha()" title="Soal baru">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+        <div class="captcha-error" id="captcha-err">Jawaban salah, coba lagi!</div>
+      </div>
+
+      <button type="submit" class="btn-login" id="btn-submit">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+        Masuk ke Dashboard
+      </button>
+    </form>
+
+    <div class="divider">FB Manager &nbsp;·&nbsp; Private &nbsp;·&nbsp; Single User</div>
+  </div>
+</div>
+
+<script>
+// ── Theme ──
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  document.getElementById('ls').style.background = dark ? '#161b27' : '#fff';
+  document.getElementById('icon-moon').style.display = dark ? 'none' : '';
+  document.getElementById('icon-sun' ).style.display = dark ? ''     : 'none';
+}
+function toggleDark() {
+  const next = !document.body.classList.contains('dark');
+  applyTheme(next);
+  localStorage.setItem('theme', next ? 'dark' : 'light');
+}
+(function() {
+  applyTheme(localStorage.getItem('theme') === 'dark');
+})();
+
+// ── Toggle password visibility ──
+function togglePass() {
+  const inp = document.getElementById('pass-input');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  document.getElementById('eye-off').style.display = show ? 'none' : '';
+  document.getElementById('eye-on' ).style.display = show ? ''     : 'none';
+}
+
+// ── Loading screen ──
+window.addEventListener('load', function() {
+  const ls = document.getElementById('ls');
+  ls.style.opacity = '0';
+  setTimeout(() => ls.style.display = 'none', 380);
+});
+
+// ── CAPTCHA ──
+var _answer = null;
+
+function genCaptcha() {
+  if (!document.getElementById('captcha-q')) return;
+  var a = Math.floor(Math.random() * 9) + 2; // 2–10
+  var b = Math.floor(Math.random() * (a - 1)) + 1; // 1..(a-1)
+  var isAdd = Math.random() < 0.5;
+  if (isAdd) {
+    _answer = a + b;
+    document.getElementById('captcha-q').textContent = a + ' + ' + b;
+  } else {
+    _answer = a - b; // selalu positif karena b < a
+    document.getElementById('captcha-q').textContent = a + ' − ' + b;
+  }
+  document.getElementById('captcha-ans').value = '';
+  var err = document.getElementById('captcha-err');
+  if (err) err.style.display = 'none';
+}
+
+function clearCaptchaErr() {
+  var err = document.getElementById('captcha-err');
+  var wrap = document.querySelector('.captcha-wrap');
+  if (err) err.style.display = 'none';
+  if (wrap) wrap.style.borderColor = '';
+}
+
+if (document.getElementById('captcha-q')) genCaptcha();
+
+// Loading spinner on submit
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  var ansEl = document.getElementById('captcha-ans');
+  var err = document.getElementById('captcha-err');
+
+  if (ansEl && _answer !== null) {
+    var ans = parseInt(ansEl.value, 10);
+    if (isNaN(ans) || ans !== _answer) {
+      e.preventDefault();
+      // tampilkan error
+      if (err) { err.style.display = 'block'; }
+      // shake captcha-wrap
+      var wrap = document.querySelector('.captcha-wrap');
+      if (wrap) {
+        wrap.classList.remove('shake');
+        void wrap.offsetWidth; // reflow supaya animasi restart
+        wrap.classList.add('shake');
+        wrap.style.borderColor = '#ef4444';
+        setTimeout(function(){ wrap.style.borderColor = ''; }, 1000);
+      }
+      genCaptcha();
+      ansEl.focus();
+      return;
+    }
+  }
+
+  if (err) err.style.display = 'none';
+  var btn = document.getElementById('btn-submit');
+  btn.innerHTML = '<svg width="16" height="16" style="animation:spin 0.8s linear infinite;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Memverifikasi...';
+  btn.style.opacity = '0.8';
+  btn.disabled = true;
+});
+</script>
+</body>
+</html>

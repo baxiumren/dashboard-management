@@ -1,0 +1,44 @@
+{{if .Akun}}
+<div class="mb-1">
+  <p class="text-xs font-mono" style="color:var(--muted)">{{.Akun.FBID}}</p>
+  <p class="text-sm font-semibold" style="color:var(--text)">{{if .Akun.Nama}}{{.Akun.Nama}}{{else}}(Nama belum diisi){{end}}</p>
+</div>
+<hr style="border-color:var(--border);margin:12px 0">
+{{end}}
+
+{{if .Riwayat}}
+<div class="mb-4 space-y-0">
+  {{range .Riwayat}}
+  <div class="tl-item">
+    <div class="tl-dot" style="{{tipeColor .Tipe}}"></div>
+    <div class="text-xs font-semibold" style="color:var(--text)">{{titleTipe .Tipe}}</div>
+    <div class="text-xs mt-0.5" style="color:#3b82f6">{{.Tanggal}}</div>
+    {{if .Catatan}}<div class="text-xs mt-1" style="color:var(--muted)">{{.Catatan}}</div>{{end}}
+  </div>
+  {{end}}
+</div>
+{{else}}
+<p class="text-xs mb-4" style="color:var(--muted)">Belum ada riwayat kejadian.</p>
+{{end}}
+
+<hr style="border-color:var(--border);margin-bottom:14px">
+<div class="text-xs font-semibold mb-3" style="color:var(--text)">+ Tambah Kejadian</div>
+<form method="POST" action="/akun-fb/riwayat/tambah" class="space-y-2">
+  <input type="hidden" name="entitas_id" value="{{if .Akun}}{{.Akun.ID}}{{end}}">
+  <div class="grid grid-cols-2 gap-2">
+    <select name="tipe" class="px-3 py-2 text-xs w-full">
+      <option value="checkpoint">Checkpoint</option>
+      <option value="suspend">Suspend</option>
+      <option value="nonaktif">Nonaktif</option>
+      <option value="kunci">Kunci</option>
+      <option value="selfie">Selfie / Verifikasi</option>
+      <option value="banned">Banned</option>
+      <option value="pulih">Pulih / Aktif kembali</option>
+      <option value="beli">Beli Akun</option>
+      <option value="lainnya">Lainnya</option>
+    </select>
+    <input type="date" name="tanggal" class="px-3 py-2 text-xs w-full" required>
+  </div>
+  <input type="text" name="catatan" placeholder="Catatan (opsional)..." class="px-3 py-2 text-xs w-full">
+  <button type="submit" class="btn-primary w-full py-2 rounded-lg text-xs font-medium">Simpan Kejadian</button>
+</form>

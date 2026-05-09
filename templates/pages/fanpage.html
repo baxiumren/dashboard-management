@@ -1,0 +1,351 @@
+{{template "layout" .}}
+
+{{define "content"}}
+<!-- Topbar Desktop -->
+<header class="hidden md:flex px-6 py-4 border-b items-center gap-4 flex-shrink-0" style="border-color:var(--border);background:var(--sidebar)">
+  <div>
+    <h1 class="text-lg font-bold" style="color:var(--text)">Fanpage Facebook</h1>
+    <p class="text-xs" style="color:var(--muted)">Kelola semua fanpage yang terhubung ke akun FB</p>
+  </div>
+  <div class="ml-auto flex items-center gap-2">
+    <form method="GET" action="/fanpage" class="flex gap-2">
+      <div class="relative">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" name="search" value="{{.Search}}" placeholder="Cari nama / Page ID..." class="pl-9 pr-4 py-2 text-sm w-56" style="border-radius:10px">
+      </div>
+      <select name="status" class="px-3 py-2 text-sm" style="border-radius:10px" onchange="this.form.submit()">
+        <option value="">Semua Status</option>
+        <option value="aktif"    {{if eq .StatusFilter "aktif"   }}selected{{end}}>Aktif</option>
+        <option value="nonaktif" {{if eq .StatusFilter "nonaktif"}}selected{{end}}>Nonaktif</option>
+        <option value="banned"   {{if eq .StatusFilter "banned"  }}selected{{end}}>Banned</option>
+      </select>
+      <button type="submit" class="px-4 py-2 rounded-xl text-xs btn-blue font-medium">Cari</button>
+    </form>
+    <button onclick="document.getElementById('modal-tambah').classList.add('show')" class="btn-primary px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Tambah Fanpage
+    </button>
+  </div>
+</header>
+
+<!-- Mobile Topbar -->
+<div class="md:hidden px-4 pt-3 pb-2 flex gap-2 flex-shrink-0">
+  <form method="GET" action="/fanpage" class="flex gap-2 w-full">
+    <div class="relative flex-1">
+      <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" name="search" value="{{.Search}}" placeholder="Cari..." class="pl-9 pr-4 py-2 text-sm w-full" style="border-radius:10px">
+    </div>
+    <select name="status" class="px-2 py-2 text-xs" style="border-radius:10px" onchange="this.form.submit()">
+      <option value="">Semua</option>
+      <option value="aktif">Aktif</option>
+      <option value="nonaktif">Nonaktif</option>
+      <option value="banned">Banned</option>
+    </select>
+  </form>
+</div>
+
+<!-- Stats Cards -->
+<div class="px-4 md:px-6 py-4 flex-shrink-0">
+<div class="flex gap-3 overflow-x-auto hide-scrollbar md:grid md:grid-cols-4 md:overflow-visible pb-1 md:pb-0">
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #3b82f6">
+    <div class="text-xs font-medium mb-1" style="color:var(--muted)">Total Fanpage</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Total}}</div>
+  </div>
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #22c55e">
+    <div class="text-xs font-medium mb-1" style="color:#4ade80">Aktif</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Aktif}}</div>
+  </div>
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #f43f5e">
+    <div class="text-xs font-medium mb-1" style="color:#fca5a5">Nonaktif</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Nonaktif}}</div>
+  </div>
+  <div class="stat-card rounded-2xl" style="border-left:3px solid #6b7280">
+    <div class="text-xs font-medium mb-1" style="color:#9ca3af">Banned</div>
+    <div class="text-2xl font-bold" style="color:var(--text)">{{.Stats.Banned}}</div>
+  </div>
+</div>
+</div>
+
+<!-- FAB (mobile only) -->
+<button type="button" class="md:hidden fab btn-primary" onclick="document.getElementById('modal-tambah').classList.add('show')">
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+</button>
+
+<!-- Content Area -->
+<div class="flex-1 overflow-auto px-4 md:px-6 pb-6">
+
+  <!-- Desktop Table -->
+  <div class="hidden md:block card rounded-2xl overflow-hidden">
+    <table>
+      <thead>
+        <tr style="background:var(--hover)">
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted);width:40px">#</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Fanpage</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Akun FB</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Business Manager</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Tgl Buat</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Status</th>
+          <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-right" style="color:var(--muted)">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range $i, $fp := .List}}
+        <tr style="border-top:1px solid var(--border)">
+          <td class="px-4 py-3 text-xs" style="color:var(--muted)">{{inc $i}}</td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">
+                {{if $fp.Nama}}{{slice $fp.Nama 0 1}}{{else}}?{{end}}
+              </div>
+              <div>
+                <div class="text-sm font-semibold" style="color:var(--text)">{{if $fp.Nama}}{{$fp.Nama}}{{else}}<span style="color:var(--muted);font-weight:400">Belum diisi</span>{{end}}</div>
+                <div class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{$fp.PageID}}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            {{if $fp.AkunFBNama}}
+              <span class="text-xs font-medium" style="color:var(--text2)">{{$fp.AkunFBNama}}</span>
+            {{else}}
+              <span class="text-xs" style="color:var(--muted)">—</span>
+            {{end}}
+          </td>
+          <td class="px-4 py-3">
+            {{if $fp.BMNama}}
+              <span class="text-xs font-medium" style="color:var(--text2)">{{$fp.BMNama}}</span>
+            {{else}}
+              <span class="text-xs" style="color:var(--muted)">—</span>
+            {{end}}
+          </td>
+          <td class="px-4 py-3 text-xs" style="color:var(--text2)">{{if $fp.TglBuat}}{{$fp.TglBuat}}{{else}}<span style="color:var(--muted)">—</span>{{end}}</td>
+          <td class="px-4 py-3"><span class="badge badge-{{$fp.Status}}">{{title $fp.Status}}</span></td>
+          <td class="px-4 py-3">
+            <div class="flex gap-1 justify-end">
+              <button onclick="openRiwayat({{$fp.ID}})" title="Lihat Riwayat" class="p-1.5 rounded-lg btn-indigo">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </button>
+              <button onclick="openEdit({{$fp.ID}})" title="Edit Fanpage" class="p-1.5 rounded-lg btn-blue">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <a href="/fanpage/hapus?id={{$fp.ID}}" onclick="return confirm('Hapus fanpage ini? Tindakan ini tidak bisa dibatalkan.')" title="Hapus" class="p-1.5 rounded-lg btn-red">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="7" class="px-4 py-16 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:var(--hover)">
+                <svg class="w-7 h-7" style="color:var(--muted)" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium" style="color:var(--text)">Belum ada fanpage</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">Tambah fanpage yang terhubung ke akun FB untuk keperluan iklan</p>
+              </div>
+              <button onclick="document.getElementById('modal-tambah').classList.add('show')" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium mt-1">+ Tambah Fanpage</button>
+            </div>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile Cards -->
+  <div class="md:hidden space-y-3 mt-1">
+    {{range $fp := .List}}
+    <div class="card rounded-2xl p-4">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">
+            {{if $fp.Nama}}{{slice $fp.Nama 0 1}}{{else}}?{{end}}
+          </div>
+          <div>
+            <div class="font-semibold text-sm" style="color:var(--text)">{{if $fp.Nama}}{{$fp.Nama}}{{else}}<span style="color:var(--muted);font-weight:400">Belum diisi</span>{{end}}</div>
+            <div class="font-mono text-xs mt-0.5" style="color:var(--muted)">{{$fp.PageID}}</div>
+          </div>
+        </div>
+        <span class="badge badge-{{$fp.Status}}">{{title $fp.Status}}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div><span style="color:var(--muted)">Akun FB</span><br><span style="color:var(--text2)">{{if $fp.AkunFBNama}}{{$fp.AkunFBNama}}{{else}}—{{end}}</span></div>
+        <div><span style="color:var(--muted)">Business Manager</span><br><span style="color:var(--text2)">{{if $fp.BMNama}}{{$fp.BMNama}}{{else}}—{{end}}</span></div>
+        <div class="col-span-2"><span style="color:var(--muted)">Tgl Buat</span><br><span style="color:var(--text2)">{{if $fp.TglBuat}}{{$fp.TglBuat}}{{else}}—{{end}}</span></div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="openRiwayat({{$fp.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-indigo">Riwayat</button>
+        <button onclick="openEdit({{$fp.ID}})" class="flex-1 py-2 rounded-xl text-xs font-medium btn-blue">Edit</button>
+        <a href="/fanpage/hapus?id={{$fp.ID}}" onclick="return confirm('Hapus fanpage ini?')" class="flex-1 py-2 rounded-xl text-xs font-medium btn-red text-center">Hapus</a>
+      </div>
+    </div>
+    {{else}}
+    <div class="card rounded-2xl p-8 text-center">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background:var(--hover)">
+        <svg class="w-6 h-6" style="color:var(--muted)" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      </div>
+      <p class="text-sm font-medium mb-1" style="color:var(--text)">Belum ada fanpage</p>
+      <p class="text-xs mb-4" style="color:var(--muted)">Tambah fanpage yang terhubung ke akun FB</p>
+      <button onclick="document.getElementById('modal-tambah').classList.add('show')" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium">+ Tambah Fanpage</button>
+    </div>
+    {{end}}
+  </div>
+</div>
+
+<!-- ── MODAL TAMBAH ── -->
+<div id="modal-tambah" class="modal-wrap">
+  <div class="modal-box" style="max-width:520px">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Tambah Fanpage</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Isi data fanpage yang ingin ditambahkan</p>
+      </div>
+      <button onclick="document.getElementById('modal-tambah').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="POST" action="/fanpage/tambah" class="space-y-3 validate-form">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Nama Fanpage <span style="color:#f87171">*</span></label>
+          <input type="text" name="nama" class="w-full px-3 py-2 text-sm" style="border-radius:10px" placeholder="Nama fanpage" required>
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Page ID <span style="color:#f87171">*</span></label>
+          <input type="text" name="page_id" class="w-full px-3 py-2 text-sm font-mono" style="border-radius:10px" placeholder="123456789012345" required>
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Akun FB Terhubung</label>
+          <select name="akun_fb_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            <option value="0">— Pilih Akun FB —</option>
+            {{range .AkunList}}
+            <option value="{{.ID}}">{{.Nama}} ({{.FBID}})</option>
+            {{end}}
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Status</label>
+          <select name="status" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            <option value="aktif">✅ Aktif</option>
+            <option value="nonaktif">❌ Nonaktif</option>
+            <option value="banned">⛔ Banned</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Tanggal Buat</label>
+          <input type="date" name="tgl_buat" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+        </div>
+        <div>
+          <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Business Manager ID <span style="color:var(--muted);font-weight:400">(opsional)</span></label>
+          <input type="number" name="bm_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px" placeholder="ID BM (angka)" min="0">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-medium block mb-1" style="color:var(--muted)">Catatan</label>
+        <textarea name="catatan" rows="2" class="w-full px-3 py-2 text-sm" style="border-radius:10px" placeholder="Catatan tambahan..."></textarea>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="document.getElementById('modal-tambah').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Batal</button>
+        <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold btn-primary">Simpan Fanpage</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL EDIT ── -->
+<div id="modal-edit" class="modal-wrap">
+  <div class="modal-box" style="max-width:520px">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Edit Fanpage</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Perbarui data fanpage</p>
+      </div>
+      <button onclick="document.getElementById('modal-edit').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="edit-form-container"></div>
+  </div>
+</div>
+
+<!-- ── MODAL RIWAYAT ── -->
+<div id="modal-riwayat" class="modal-wrap">
+  <div class="modal-box" style="max-width:480px">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-base" style="color:var(--text)">Riwayat Fanpage</h2>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Histori aktivitas fanpage ini</p>
+      </div>
+      <button onclick="document.getElementById('modal-riwayat').classList.remove('show')" class="p-1.5 rounded-lg" style="color:var(--muted);background:var(--hover)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="riwayat-container"></div>
+  </div>
+</div>
+
+<script>
+const fpData = {
+  {{range $fp := .List}}
+  {{$fp.ID}}: {
+    id: {{$fp.ID}},
+    nama: {{jsonStr $fp.Nama}},
+    page_id: {{jsonStr $fp.PageID}},
+    akun_fb_id: {{$fp.AkunFBID}},
+    bm_id: {{$fp.BMID}},
+    status: {{jsonStr $fp.Status}},
+    tgl_buat: {{jsonStr $fp.TglBuat}},
+    catatan: {{jsonStr $fp.Catatan}},
+  },
+  {{end}}
+};
+
+const akunList = [
+  {{range .AkunList}}
+  {id: {{.ID}}, nama: {{jsonStr .Nama}}, fb_id: {{jsonStr .FBID}}},
+  {{end}}
+];
+
+function openEdit(id) {
+  const fp = fpData[id];
+  if (!fp) return;
+  const statusOpts = ['aktif','nonaktif','banned'];
+  const statusLabels = {'aktif':'✅ Aktif','nonaktif':'❌ Nonaktif','banned':'⛔ Banned'};
+  const akunOptions = '<option value="0">— Pilih Akun FB —</option>' +
+    akunList.map(a => `<option value="${a.id}" ${fp.akun_fb_id===a.id?'selected':''}>${a.nama} (${a.fb_id})</option>`).join('');
+  document.getElementById('edit-form-container').innerHTML = `
+    <form method="POST" action="/fanpage/edit?id=${fp.id}" class="space-y-3 validate-form">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Nama Fanpage</label><input type="text" name="nama" value="${fp.nama}" class="w-full px-3 py-2 text-sm" style="border-radius:10px" required></div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Page ID</label><input type="text" name="page_id" value="${fp.page_id}" class="w-full px-3 py-2 text-sm font-mono" style="border-radius:10px" required></div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Akun FB Terhubung</label>
+          <select name="akun_fb_id" class="w-full px-3 py-2 text-sm" style="border-radius:10px">${akunOptions}</select>
+        </div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Status</label>
+          <select name="status" class="w-full px-3 py-2 text-sm" style="border-radius:10px">
+            ${statusOpts.map(s=>`<option value="${s}" ${fp.status===s?'selected':''}>${statusLabels[s]}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Tanggal Buat</label><input type="date" name="tgl_buat" value="${fp.tgl_buat}" class="w-full px-3 py-2 text-sm" style="border-radius:10px"></div>
+        <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Business Manager ID</label><input type="number" name="bm_id" value="${fp.bm_id||''}" class="w-full px-3 py-2 text-sm" style="border-radius:10px" min="0" placeholder="ID BM (angka)"></div>
+      </div>
+      <div><label class="text-xs font-medium block mb-1" style="color:var(--muted)">Catatan</label><textarea name="catatan" rows="2" class="w-full px-3 py-2 text-sm" style="border-radius:10px">${fp.catatan}</textarea></div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="document.getElementById('modal-edit').classList.remove('show')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background:var(--hover);color:var(--text)">Batal</button>
+        <button type="submit" class="flex-1 py-2.5 rounded-xl text-sm font-semibold btn-primary">Simpan Perubahan</button>
+      </div>
+    </form>`;
+  document.getElementById('modal-edit').classList.add('show');
+}
+
+function openRiwayat(id) {
+  fetch('/fanpage/riwayat?id=' + id, {headers:{'X-Fragment':'1'}})
+    .then(r => r.text())
+    .then(html => {
+      document.getElementById('riwayat-container').innerHTML = html;
+      document.getElementById('modal-riwayat').classList.add('show');
+    });
+}
+</script>
+{{end}}

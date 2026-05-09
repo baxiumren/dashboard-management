@@ -1,0 +1,87 @@
+{{template "layout" .}}
+{{define "content"}}
+<header class="hidden md:flex px-6 py-4 border-b items-center gap-4 flex-shrink-0" style="border-color:var(--border);background:var(--sidebar)">
+  <div>
+    <h1 class="text-lg font-bold" style="color:var(--text)">Ekspor Data</h1>
+    <p class="text-xs" style="color:var(--muted)">Download semua data dalam format CSV</p>
+  </div>
+</header>
+
+<div class="md:hidden px-4 py-3 border-b flex-shrink-0" style="border-color:var(--border)">
+  <h1 class="text-base font-bold" style="color:var(--text)">Ekspor Data</h1>
+  <p class="text-xs mt-0.5" style="color:var(--muted)">Download semua data dalam format CSV</p>
+</div>
+
+<div class="flex-1 overflow-auto px-4 md:px-6 py-6">
+  <div class="max-w-xl space-y-3">
+
+    <div class="card rounded-2xl p-5 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(59,130,246,.12)">
+          <svg class="w-5 h-5" fill="currentColor" style="color:#3b82f6" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+        </div>
+        <div>
+          <div class="font-semibold text-sm" style="color:var(--text)">Akun Facebook</div>
+          <div class="text-xs mt-0.5" style="color:var(--muted)">Nama, FB ID, Email, Status, Tgl Beli, Harga, Seller</div>
+        </div>
+      </div>
+      <a href="/ekspor/download?type=akun_fb" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 flex-shrink-0">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download
+      </a>
+    </div>
+
+    <div class="card rounded-2xl p-5 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(139,92,246,.12)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" style="color:#8b5cf6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/></svg>
+        </div>
+        <div>
+          <div class="font-semibold text-sm" style="color:var(--text)">Fanpage</div>
+          <div class="text-xs mt-0.5" style="color:var(--muted)">Nama, Page ID, Status, Tgl Buat</div>
+        </div>
+      </div>
+      <a href="/ekspor/download?type=fanpage" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 flex-shrink-0">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download
+      </a>
+    </div>
+
+    <div class="card rounded-2xl p-5 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(245,158,11,.12)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" style="color:#f59e0b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <div>
+          <div class="font-semibold text-sm" style="color:var(--text)">Business Manager</div>
+          <div class="text-xs mt-0.5" style="color:var(--muted)">Nama, BM ID, Status, Tgl Buat</div>
+        </div>
+      </div>
+      <a href="/ekspor/download?type=bm" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 flex-shrink-0">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download
+      </a>
+    </div>
+
+    <div class="card rounded-2xl p-5 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(6,182,212,.12)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" style="color:#06b6d4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+        </div>
+        <div>
+          <div class="font-semibold text-sm" style="color:var(--text)">Akun Iklan</div>
+          <div class="text-xs mt-0.5" style="color:var(--muted)">Nama, Ad Account ID, Status, Limit, Metode Bayar</div>
+        </div>
+      </div>
+      <a href="/ekspor/download?type=akun_iklan" class="btn-primary px-4 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 flex-shrink-0">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download
+      </a>
+    </div>
+
+    <p class="text-xs px-1" style="color:var(--muted)">
+      * Password, cookie, dan 2FA tidak ikut diekspor demi keamanan data.
+    </p>
+  </div>
+</div>
+{{end}}
